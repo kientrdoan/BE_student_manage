@@ -5,12 +5,11 @@ RESPONSE_CODE = {
     "UNAUTHORIZED": {"code": 401, "msg": "UNAUTHORIZED"},
     "PERMISSION_DENIED": {"code": 403, "msg": "PERMISSION DENIED"},
     "NOT_FOUND": {"code": 404, "msg": "NOT FOUND"},
-    "INVALID_INPUT": {"code": 400, "msg": "Dữ liệu không hợp lệ"},
 }
 
 class ResponseFormat:
     @staticmethod
-    def response(data=None, case_name="SUCCESS", status = 200) -> Response:
+    def response(data=None, case_name="", status = 200) -> Response:
         response_data = {
             "status_code": RESPONSE_CODE.get(case_name).get("code"),
             "message": RESPONSE_CODE.get(case_name).get("msg"),
