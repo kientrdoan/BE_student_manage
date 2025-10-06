@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from apps.my_built_in.models.subject import Subject
+from apps.my_built_in.models.mon_hoc import Subject
 
 class SubjectSerializer(serializers.ModelSerializer):
     class Meta:

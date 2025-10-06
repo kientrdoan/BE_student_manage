@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from apps.my_built_in.models.semester import Semester
+from apps.my_built_in.models.hoc_ky import Semester
 
 
 class SemesterSerializer(serializers.ModelSerializer):

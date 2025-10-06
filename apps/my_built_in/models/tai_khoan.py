@@ -20,15 +20,15 @@ class MyUserManager(BaseUserManager):
         return self.create_user(email, password, **extra_fields)
 
 
-class User(AbstractBaseUser):
+class TaiKhoan(AbstractBaseUser):
     email = models.CharField(max_length=50, unique=True,)
-    password = models.CharField(db_column="password_hash", max_length=156)
     first_name = models.CharField(max_length=50, null=True, blank=True)
     last_name = models.CharField(max_length=50, null=True, blank=True)
+    password = models.CharField(db_column="password_hash", max_length=156)
     phone = models.CharField(max_length=12, null=True, blank=True)
     address = models.CharField(max_length=156, null=True, blank=True)
     identity_number = models.CharField(max_length=12, null=True, blank=True)
-    date_of_birth = models.DateField(null=True, blank=True)
+    birthday = models.DateField(null=True, blank=True)
     gender = models.CharField(max_length=1, null=True, blank=True)
     url = models.CharField(max_length=156, null=True, blank=True)
     vector_embedding = models.CharField(max_length=156, null=True, blank=True)

@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 
 # model
-from apps.my_built_in.models.student import Student
+from apps.my_built_in.models.sinh_vien import Student
 # serializer
 from apps.admins.serializers.student import StudentDetailSerializer, StudentCreateSerializer, StudentUpdateSerializer
 

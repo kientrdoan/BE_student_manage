@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 
 # model
-from apps.my_built_in.models.classes import Class
+from apps.my_built_in.models.lop_sinh_vien import Class
 
 # serializer
 from apps.admins.serializers.classes import ClassDetailSerializer

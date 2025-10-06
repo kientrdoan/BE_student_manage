@@ -1,6 +1,6 @@
 from rest_framework.serializers import ModelSerializer
 
-from apps.my_built_in.models.deparment import Department
+from apps.my_built_in.models.khoa import Department
 
 class DepartmentDetailSerializer(ModelSerializer):
     class Meta:

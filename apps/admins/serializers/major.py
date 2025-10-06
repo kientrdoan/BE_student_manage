@@ -1,6 +1,6 @@
 from rest_framework.serializers import ModelSerializer
 
-from apps.my_built_in.models.major import Major
+from apps.my_built_in.models.nganh import Major
 
 class MajorDetailSerializer(ModelSerializer):
     class Meta:

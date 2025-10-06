@@ -8,7 +8,7 @@ from apps.my_built_in.rest_framework.permission import IsTeacher, IsAdmin
 
 from apps.authens.serializers.user import UserDetailSerializer, UserListSerializer, UserCreateSerializer
 
-from apps.my_built_in.models.user import User
+from apps.my_built_in.models.tai_khoan import TaiKhoan as User
 
 from apps.my_built_in.response import ResponseFormat
 

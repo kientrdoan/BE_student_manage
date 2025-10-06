@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from apps.my_built_in.models.course import Course
+from apps.my_built_in.models.lop_tin_chi import Course
 
 class CourseSerializer(serializers.ModelSerializer):
     semester = serializers.SerializerMethodField()

@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 
 # model
-from apps.my_built_in.models.instructors import Instructor
+from apps.my_built_in.models.giao_vien import Instructor
 # serializer
 from apps.admins.serializers.teacher import TeacherDetailSerializer, TeacherCreateSerializer, TeacherUpdateSerializer
 

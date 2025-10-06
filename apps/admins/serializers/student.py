@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
-from apps.my_built_in.models.student import Student
-from apps.my_built_in.models.user import User
+from apps.my_built_in.models.sinh_vien import Student
+from apps.my_built_in.models.tai_khoan import User
 
 from apps.authens.serializers.user import UserCreateSerializer, UserUpdateSerializer
 

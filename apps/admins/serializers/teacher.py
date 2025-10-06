@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from apps.my_built_in.models.instructors import Instructor
+from apps.my_built_in.models.giao_vien import Instructor
 
 from apps.authens.serializers.user import UserCreateSerializer, UserUpdateSerializer
 

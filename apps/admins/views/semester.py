@@ -1,6 +1,6 @@
 from rest_framework.views import APIView
 
-from apps.my_built_in.models.semester import Semester
+from apps.my_built_in.models.hoc_ky import Semester
 
 from apps.admins.serializers.semester import SemesterSerializer
 

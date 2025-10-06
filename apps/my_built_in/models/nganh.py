@@ -1,13 +1,14 @@
 from django.db import models
 
-class Major(models.Model):
+class Nganh(models.Model):
     name = models.CharField(max_length=100, null=True)
-    department = models.ForeignKey('Department', db_column="department_id", on_delete=models.CASCADE)
+    department = models.ForeignKey('Khoa', db_column="department_id", on_delete=models.CASCADE, related_name="nganh")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    is_deleted = models.BooleanField(default=False)
 
     class Meta:
-        db_table = "majors"
+        db_table = "nganh"
 
     def __str__(self):
         return self.name

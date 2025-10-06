@@ -54,9 +54,3 @@ urlpatterns += [
     path('subjects/', SubjectView.as_view(), name='course-list'),
     path('subjects/<int:pk>', SubjectDetailView.as_view(), name='course-detail'),
 ]
-
-# Register Period
-urlpatterns += [
-    path('register-periods/', RegisterPeriodView.as_view(), name='course-list'),
-    path('register-periods/<int:pk>', RegisterPeriodDetailView.as_view(), name='course-detail'),
-]

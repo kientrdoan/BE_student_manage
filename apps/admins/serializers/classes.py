@@ -1,5 +1,5 @@
 from rest_framework.serializers import ModelSerializer
-from apps.my_built_in.models.classes import Class
+from apps.my_built_in.models.lop_sinh_vien import Class
 
 
 class ClassDetailSerializer(ModelSerializer):
