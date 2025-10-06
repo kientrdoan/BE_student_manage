@@ -21,17 +21,17 @@ class MajorView(APIView):
             return ResponseFormat.response(data=serializer.data)
         return ResponseFormat.response(data=serializer.errors, status=400)
     
-    def put(self, request, pk):
+    def put(self, request):
         try:
-            major = Major.objects.get(pk=pk)
+            major = Major.objects.get(pk=request.data.get("id"))
         except Major.DoesNotExist:
-            return ResponseFormat.error(message="Major not found")
+            return ResponseFormat.response(data=None, case_name="NOT_FOUND")
         
         serializer = MajorDetailSerializer(major, data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return ResponseFormat.success(data=serializer.data)
-        return ResponseFormat.error(message="Invalid data", errors=serializer.errors)
+            return ResponseFormat.response(data=serializer.data)
+        return ResponseFormat.response(data=serializer.errors)
     
     def delete(self, request, pk):
         try:

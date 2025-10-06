@@ -1,10 +1,10 @@
 from django.db import models
 
 class Class(models.Model):
-    major_id= models.ForeignKey('Major', on_delete=models.CASCADE)
-    specialization_id= models.ForeignKey('Specialization', on_delete=models.CASCADE) 
-    start_year= models.IntegerField()
-    end_year= models.IntegerField()
+    name = models.CharField(max_length=50, null= True)
+    major = models.ForeignKey('Major', on_delete=models.CASCADE ,null=True)
+    start_year= models.IntegerField(null=True)
+    end_year= models.IntegerField(null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

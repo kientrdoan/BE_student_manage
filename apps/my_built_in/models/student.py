@@ -1,9 +1,9 @@
 from django.db import models
 
 class Student(models.Model):
-    user_id = models.ForeignKey('User', on_delete=models.CASCADE)
+    user = models.ForeignKey('User', related_name="user", on_delete=models.CASCADE)
     student_code = models.CharField(max_length=50)
-    class_id = models.ForeignKey('Class', on_delete=models.CASCADE)
+    classes = models.ForeignKey('Class', db_column="class_id", related_name="classes", on_delete=models.CASCADE)
 
     class Meta:
         db_table = "students"

@@ -5,7 +5,8 @@ RESPONSE_CODE = {
     "UNAUTHORIZED": {"code": 401, "msg": "UNAUTHORIZED"},
     "PERMISSION_DENIED": {"code": 403, "msg": "PERMISSION DENIED"},
     "NOT_FOUND": {"code": 404, "msg": "NOT FOUND"},
-    "INVALID_INPUT": {"code": 400, "msg": "Dữ liệu không hợp lệ"},
+    "INVALID_INPUT": {"code": 405, "msg": "Dữ liệu không hợp lệ"},
+    "ERROR": {"code": 400, "msg": "Có lỗi xảy ra trong quá trình xử lý"},
 }
 
 class ResponseFormat:

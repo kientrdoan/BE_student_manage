@@ -1,21 +1,21 @@
 from rest_framework.views import APIView
 
 # model
-from apps.my_built_in.models.deparment import Department
+from apps.my_built_in.models.classes import Class
 
 # serializer
-from apps.admins.serializers.department import DepartmentDetailSerializer
+from apps.admins.serializers.classes import ClassDetailSerializer
 
 from apps.my_built_in.response import ResponseFormat
 
-class DepartmentView(APIView):
+class ClassView(APIView):
     def get(self, request):
-        departments = Department.objects.all()
-        serializer = DepartmentDetailSerializer(departments, many=True)
+        classes = Class.objects.all()
+        serializer = ClassDetailSerializer(classes, many=True)
         return ResponseFormat.response(data=serializer.data, case_name="SUCCESS")
 
     def post(self, request):
-        serializer = DepartmentDetailSerializer(data=request.data)
+        serializer = ClassDetailSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return ResponseFormat.response(data=serializer.data, case_name="SUCCESS")
@@ -23,20 +23,20 @@ class DepartmentView(APIView):
     
     def put(self, request):
         try:
-            department = Department.objects.get(pk=request.data.get('id'))
-        except Department.DoesNotExist:
+            department = Class.objects.get(pk=request.data.get("id"))
+        except Class.DoesNotExist:
             return ResponseFormat.response(data=None, case_name="NOT_FOUND")
         
-        serializer = DepartmentDetailSerializer(department, data=request.data)
+        serializer = ClassDetailSerializer(department, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return ResponseFormat.response(data=serializer.data)
-        return ResponseFormat.response(data=serializer.errors)
+        return ResponseFormat.response(data=serializer.errors, case_name="INVALID_INPUT")
     
     def delete(self, request, pk):
         try:
-            department = Department.objects.get(pk=pk)
-        except Department.DoesNotExist:
+            department = Class.objects.get(pk=pk)
+        except Class.DoesNotExist:
             return ResponseFormat.error(message="Department not found")
         
         department.delete()
