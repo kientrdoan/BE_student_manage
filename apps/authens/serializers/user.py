@@ -5,7 +5,7 @@ from apps.my_built_in.models.tai_khoan import TaiKhoan as User
 class UserDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'email', 'first_name', 'last_name', 'phone', 'address', 'identity_number', 'date_of_birth', 'gender', 'role', 'url', 'is_active']
+        fields = ['id', 'email', 'first_name', 'last_name', 'phone', 'address', 'identity_number', 'birthday', 'gender', 'role', 'url', 'is_active']
 
 class UserListSerializer(serializers.ModelSerializer):
     class Meta:
@@ -15,7 +15,7 @@ class UserListSerializer(serializers.ModelSerializer):
 class UserCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['email', 'first_name', 'last_name', 'phone', 'address', 'identity_number', 'date_of_birth', 'gender', 'role', 'url', 'is_active']
+        fields = ['email', 'first_name', 'last_name', 'phone', 'address', 'identity_number', 'birthday', 'gender', 'role', 'url', 'is_active']
 
     def create(self, validated_data):
         password = validated_data.pop("password", None)
@@ -36,7 +36,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
     email = serializers.EmailField()
     class Meta:
         model = User
-        fields = ['email', 'first_name', 'last_name', 'phone', 'address', 'identity_number', 'date_of_birth', 'gender', 'role', 'url', 'is_active']
+        fields = ['email', 'first_name', 'last_name', 'phone', 'address', 'identity_number', 'birthday', 'gender', 'role', 'url', 'is_active']
 
 
 

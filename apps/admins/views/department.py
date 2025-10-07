@@ -37,7 +37,8 @@ class DepartmentView(APIView):
         try:
             department = Department.objects.get(pk=pk)
         except Department.DoesNotExist:
-            return ResponseFormat.error(message="Department not found")
+            return ResponseFormat.response(data=None, case_name="NOT_FOUND")
         
-        department.delete()
-        return ResponseFormat.success(data={"message": "Department deleted successfully"})
+        department.is_active = True
+        department.save()
+        return ResponseFormat.response(data=None, case_name="SUCCESS")

@@ -43,7 +43,7 @@ class TaiKhoan(AbstractBaseUser):
     objects = MyUserManager()
 
     class Meta:
-        db_table = "users"
+        db_table = "tai_khoan"
 
     def __str__(self):
         return self.email
