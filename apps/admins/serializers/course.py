@@ -5,11 +5,11 @@ from apps.my_built_in.models.lop_tin_chi import LopTinChi as Course
 class CourseSerializer(serializers.ModelSerializer):
     semester = serializers.SerializerMethodField()
     subject = serializers.SerializerMethodField()
-    instructor = serializers.SerializerMethodField()
+    teacher = serializers.SerializerMethodField()
     class_st = serializers.SerializerMethodField()
     class Meta:
         model = Course
-        fields = ['id', 'semester', 'subject', 'instructor', 'class_st', 'max_capacity', 'updated_at', 'created_at']
+        fields = ['id', 'semester', 'subject', 'teacher', 'class_st', 'room', 'max_capacity', 'updated_at', 'created_at', 'is_deleted']
         read_only_fields = ['id', 'updated_at', 'created_at']
 
     def get_semester(self, obj):
@@ -32,14 +32,14 @@ class CourseSerializer(serializers.ModelSerializer):
             }
         return None
     
-    def get_instructor(self, obj):
-        instructor = obj.instructor
-        if instructor:
+    def get_teacher(self, obj):
+        teacher = obj.teacher
+        if teacher:
             return {
-                "id": instructor.id,
-                "instructor_code": instructor.instructor_code,
-                "degree": instructor.degree,
-                "name": f"{instructor.user.first_name} {instructor.user.last_name}" if instructor.user else "",
+                "id": teacher.id,
+                "teacher_code": teacher.teacher_code,
+                "degree": teacher.degree,
+                "name": f"{teacher.user.first_name} {teacher.user.last_name}" if teacher.user else "",
             }
         return None
     
@@ -55,4 +55,4 @@ class CourseSerializer(serializers.ModelSerializer):
 class CourseCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
-        fields = ['semester', 'subject', 'instructor', 'class_st', 'max_capacity']
+        fields = ['semester', 'subject', 'teacher', 'class_st', 'room', 'max_capacity', 'is_deleted']

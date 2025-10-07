@@ -9,7 +9,7 @@ class StudentDetailSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField()
     class Meta:
         model = SinhVien
-        fields = ['id', 'student_code', 'classes', "user"]
+        fields = ['id', 'student_code', 'class_student', 'user', 'is_deleted']
     
     def get_user(self, obj):
         user = obj.user
@@ -22,7 +22,7 @@ class StudentDetailSerializer(serializers.ModelSerializer):
                 "phone": user.phone,
                 "address": user.address,
                 "identity_number": user.identity_number,
-                "date_of_birth": user.date_of_birth,
+                "birthday": user.birthday,
                 "gender": user.gender,
                 "url": user.url
             }
@@ -32,7 +32,7 @@ class StudentCreateSerializer(serializers.ModelSerializer):
     user = UserCreateSerializer()
     class Meta:
         model = SinhVien
-        fields = ['id', 'student_code', 'classes', "user"]
+        fields = ['id', 'student_code', 'class_student', 'user']
     
     def create(self, validated_data):
         user_data = validated_data.pop('user')
@@ -44,7 +44,7 @@ class StudentUpdateSerializer(serializers.ModelSerializer):
     user = UserUpdateSerializer()
     class Meta:
         model = SinhVien
-        fields = ['id', 'student_code', 'classes', "user"]
+        fields = ['id', 'student_code', 'class_student', 'user', 'is_deleted']
     
     def update(self, instance, validated_data):
         # Lấy dữ liệu user
@@ -52,7 +52,7 @@ class StudentUpdateSerializer(serializers.ModelSerializer):
 
         # Update Student trước
         instance.student_code = validated_data.get('student_code', instance.student_code)
-        instance.classes = validated_data.get('classes', instance.classes)
+        instance.class_student = validated_data.get('class_student', instance.class_student)
         instance.save()
 
         # Update User nếu có dữ liệu

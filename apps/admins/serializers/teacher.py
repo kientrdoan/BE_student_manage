@@ -8,7 +8,7 @@ class TeacherDetailSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField()
     class Meta:
         model = GiaoVien
-        fields = ['id', "instructor_code", "degree", "title", "department", "user"]
+        fields = ['id', "teacher_code", "degree", "title", "department", "user", "start_date", "end_date", "is_deleted"]
     
     def get_user(self, obj):
         user = obj.user
@@ -21,7 +21,7 @@ class TeacherDetailSerializer(serializers.ModelSerializer):
                 "phone": user.phone,
                 "address": user.address,
                 "identity_number": user.identity_number,
-                "date_of_birth": user.date_of_birth,
+                "birthday": user.birthday,
                 "gender": user.gender,
                 "url": user.url
             }
@@ -31,7 +31,7 @@ class TeacherCreateSerializer(serializers.ModelSerializer):
     user = UserCreateSerializer()
     class Meta:
         model = GiaoVien
-        fields = ["instructor_code", "department", "degree", "title", "user"]
+        fields = ["teacher_code", "degree", "title", "department", "user", "start_date", "end_date"]
     
     def create(self, validated_data):
         user_data = validated_data.pop('user')
@@ -43,7 +43,7 @@ class TeacherUpdateSerializer(serializers.ModelSerializer):
     user = UserUpdateSerializer()
     class Meta:
         model = GiaoVien
-        fields = ["instructor_code", "department", "degree", "title", "user"]
+        fields = ["teacher_code", "degree", "title", "department", "user", "start_date", "end_date", "is_deleted"]
     
     def update(self, instance, validated_data):
         user_data = validated_data.pop("user", None)
