@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 
 # model
-from apps.my_built_in.models.giao_vien import Instructor
+from apps.my_built_in.models.giao_vien import GiaoVien as Teacher
 # serializer
 from apps.admins.serializers.teacher import TeacherDetailSerializer, TeacherCreateSerializer, TeacherUpdateSerializer
 
@@ -9,7 +9,7 @@ from apps.my_built_in.response import ResponseFormat
 
 class TeacherView(APIView):
     def get(self, request):
-        students = Instructor.objects.all()
+        students = Teacher.objects.all()
         serializer = TeacherDetailSerializer(students, many=True)
         return ResponseFormat.response(data=serializer.data, case_name="SUCCESS")
 
@@ -24,8 +24,8 @@ class TeacherView(APIView):
 class TeacherDetailView(APIView):
     def get(self, request, pk):
         try:
-            student = Instructor.objects.get(id=pk)
-        except Instructor.DoesNotExist:
+            student = Teacher.objects.get(id=pk)
+        except Teacher.DoesNotExist:
             return ResponseFormat.response(data=None, case_name="NOT_FOUND")
         
         serializer = TeacherDetailSerializer(student)
@@ -33,8 +33,8 @@ class TeacherDetailView(APIView):
     
     def put(self, request, pk):
         try:
-            teacher = Instructor.objects.get(pk=pk)
-        except Instructor.DoesNotExist:
+            teacher = Teacher.objects.get(pk=pk)
+        except Teacher.DoesNotExist:
             return ResponseFormat.response(data=None, case_name="NOT_FOUND")
         
         serializer = TeacherUpdateSerializer(teacher, data=request.data)
@@ -45,8 +45,8 @@ class TeacherDetailView(APIView):
     
     def delete(self, request, pk):
         try:
-            teacher = Instructor.objects.get(pk=pk)
-        except Instructor.DoesNotExist:
+            teacher = Teacher.objects.get(pk=pk)
+        except Teacher.DoesNotExist:
             return ResponseFormat.response(data=None, case_name="NOT_FOUND")
         
         teacher.delete()

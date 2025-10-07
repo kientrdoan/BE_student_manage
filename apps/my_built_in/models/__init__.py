@@ -1,1 +1,1 @@
-from .tai_khoan import User
+from .tai_khoan import TaiKhoan

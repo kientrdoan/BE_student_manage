@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 
 # model
-from apps.my_built_in.models.khoa import Department
+from apps.my_built_in.models.khoa import Khoa as Department
 
 # serializer
 from apps.admins.serializers.department import DepartmentDetailSerializer

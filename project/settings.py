@@ -32,7 +32,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ALLOWED_HOSTS = ["*"]
 
-AUTH_USER_MODEL = "my_built_in.User"
+AUTH_USER_MODEL = "my_built_in.TaiKhoan"
 
 
 # Application definition

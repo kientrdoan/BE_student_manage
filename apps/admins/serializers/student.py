@@ -1,14 +1,14 @@
 from rest_framework import serializers
 
-from apps.my_built_in.models.sinh_vien import Student
-from apps.my_built_in.models.tai_khoan import User
+from apps.my_built_in.models.sinh_vien import SinhVien
+from apps.my_built_in.models.tai_khoan import TaiKhoan
 
 from apps.authens.serializers.user import UserCreateSerializer, UserUpdateSerializer
 
 class StudentDetailSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField()
     class Meta:
-        model = Student
+        model = SinhVien
         fields = ['id', 'student_code', 'classes', "user"]
     
     def get_user(self, obj):
@@ -31,19 +31,19 @@ class StudentDetailSerializer(serializers.ModelSerializer):
 class StudentCreateSerializer(serializers.ModelSerializer):
     user = UserCreateSerializer()
     class Meta:
-        model = Student
+        model = SinhVien
         fields = ['id', 'student_code', 'classes', "user"]
     
     def create(self, validated_data):
         user_data = validated_data.pop('user')
         user = UserCreateSerializer().create(user_data)
-        student = Student.objects.create(user=user, **validated_data)
+        student = SinhVien.objects.create(user=user, **validated_data)
         return student
     
 class StudentUpdateSerializer(serializers.ModelSerializer):
     user = UserUpdateSerializer()
     class Meta:
-        model = Student
+        model = SinhVien
         fields = ['id', 'student_code', 'classes', "user"]
     
     def update(self, instance, validated_data):

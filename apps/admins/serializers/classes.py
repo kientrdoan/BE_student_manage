@@ -1,9 +1,9 @@
 from rest_framework.serializers import ModelSerializer
-from apps.my_built_in.models.lop_sinh_vien import Class
+from apps.my_built_in.models.lop_sinh_vien import LopSinhVien
 
 
 class ClassDetailSerializer(ModelSerializer):
     class Meta:
-        model = Class
+        model = LopSinhVien
         fields = ['id', 'name', 'major', 'start_year', 'end_year', 'created_at', 'updated_at']
         read_only_fields = ['id', 'created_at', 'updated_at']

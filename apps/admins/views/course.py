@@ -1,6 +1,6 @@
 from rest_framework.views import APIView
 
-from apps.my_built_in.models.lop_tin_chi import Course
+from apps.my_built_in.models.lop_tin_chi import LopTinChi as Course
 
 from apps.admins.serializers.course import CourseSerializer, CourseCreateUpdateSerializer
 

@@ -10,3 +10,6 @@ class PhongHoc(models.Model):
 
     class Meta:
         db_table = "phong_hoc"
+
+    def __str__(self):
+        return self.room_code

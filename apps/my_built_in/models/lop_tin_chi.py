@@ -1,6 +1,7 @@
 from django.db import models
 
 # from apps.my_built_in.models.mon_hoc import Subject
+from apps.my_built_in.models.phong_hoc import PhongHoc
 
 class LopTinChi(models.Model):
 
@@ -8,7 +9,7 @@ class LopTinChi(models.Model):
     subject = models.ForeignKey("MonHoc", on_delete=models.CASCADE, db_column="subject_id", related_name="lop_tin_chi")
     teacher = models.ForeignKey('GiaoVien', on_delete=models.CASCADE, db_column="teacher_id", related_name="lop_tin_chi")
     class_st = models.ForeignKey('LopTinChi', on_delete=models.CASCADE, db_column="class_id", related_name="lop_tin_chi")
-    room = models.ForeignKey('PhongHoc', on_delete=models.CASCADE, db_column="room_id", related_name="lop_tin_chi", null=True)
+    room = models.ForeignKey(PhongHoc, on_delete=models.CASCADE, db_column="room_id", related_name="lop_tin_chi")
 
     max_capacity = models.IntegerField()
 

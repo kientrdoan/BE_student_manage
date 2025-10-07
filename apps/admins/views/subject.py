@@ -1,6 +1,6 @@
 from rest_framework.views import APIView
 
-from apps.my_built_in.models.mon_hoc import Subject
+from apps.my_built_in.models.mon_hoc import MonHoc as Subject
 
 from apps.admins.serializers.subject import SubjectSerializer
 

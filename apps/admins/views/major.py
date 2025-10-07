@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 
 # model
-from apps.my_built_in.models.nganh import Major
+from apps.my_built_in.models.nganh import Nganh as Major
 
 # serializer
 from apps.admins.serializers.major import MajorDetailSerializer

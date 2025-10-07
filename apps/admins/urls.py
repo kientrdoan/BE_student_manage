@@ -8,7 +8,6 @@ from apps.admins.views.teacher import TeacherView, TeacherDetailView
 from apps.admins.views.semester import SemesterView, SemesterDetailView
 from apps.admins.views.course import CourseView, CourseDetailView
 from apps.admins.views.subject import SubjectView, SubjectDetailView
-from apps.admins.views.register_period import RegisterPeriodView, RegisterPeriodDetailView
 
 # Department
 urlpatterns = [
