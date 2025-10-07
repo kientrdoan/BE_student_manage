@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 # model
 from apps.my_built_in.models.specialization import Specialization
 
-# serializer
+# serializers
 from apps.admins.serializers.specialization import SpecializationDetailSerializer
 
 from apps.my_built_in.response import ResponseFormat
