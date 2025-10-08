@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 
 # model
-from apps.my_built_in.models.deparment import Department
+from apps.my_built_in.models.khoa import Khoa as Department
 
 # serializers
 from apps.admins.serializers.department import DepartmentDetailSerializer
@@ -21,23 +21,24 @@ class DepartmentView(APIView):
             return ResponseFormat.response(data=serializer.data, case_name="SUCCESS")
         return ResponseFormat.response(data=serializer.errors, case_name="INVALID_INPUT")
     
-    def put(self, request, pk):
+    def put(self, request):
         try:
-            department = Department.objects.get(pk=pk)
+            department = Department.objects.get(pk=request.data.get('id'))
         except Department.DoesNotExist:
-            return ResponseFormat.error(message="Department not found")
+            return ResponseFormat.response(data=None, case_name="NOT_FOUND")
         
         serializer = DepartmentDetailSerializer(department, data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return ResponseFormat.success(data=serializer.data)
-        return ResponseFormat.error(message="Invalid data", errors=serializer.errors)
+            return ResponseFormat.response(data=serializer.data)
+        return ResponseFormat.response(data=serializer.errors)
     
     def delete(self, request, pk):
         try:
             department = Department.objects.get(pk=pk)
         except Department.DoesNotExist:
-            return ResponseFormat.error(message="Department not found")
+            return ResponseFormat.response(data=None, case_name="NOT_FOUND")
         
-        department.delete()
-        return ResponseFormat.success(data={"message": "Department deleted successfully"})
+        department.is_active = True
+        department.save()
+        return ResponseFormat.response(data=None, case_name="SUCCESS")
