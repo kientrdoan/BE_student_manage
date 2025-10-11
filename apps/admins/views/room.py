@@ -1,52 +1,49 @@
 from rest_framework.views import APIView
 
-from apps.my_built_in.models.mon_hoc import MonHoc as Subject
+from apps.my_built_in.models.phong_hoc import PhongHoc
 
-from apps.admins.serializers.subject import SubjectSerializer, SubjectCreateSerializer, SubjectUpdateSerializer
-
+from apps.admins.serializers.room import RoomSerializer, RoomCreateSerializer, RoomUpdateSerializer
 
 from apps.my_built_in.response import ResponseFormat
 
-
-class SubjectView(APIView):
+class RoomView(APIView):
     def get(self, request):
-        subjects = Subject.objects.all()
-        serializer = SubjectSerializer(subjects, many=True)
+        rooms = PhongHoc.objects.all()
+        serializer = RoomSerializer(rooms, many=True)
         return ResponseFormat.response(data=serializer.data)
     
     def post(self, request):
-        serializer = SubjectCreateSerializer(data=request.data)
+        serializer = RoomCreateSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return ResponseFormat.response(data=serializer.data)
         return ResponseFormat.response(data=serializer.error_messages, case_name="ERROR", status=400)
     
-class SubjectDetailView(APIView):
+class RoomDetailView(APIView):
     def get(self, request, pk):
         try:
-            subject = Subject.objects.get(pk=pk)
-            serializer = SubjectSerializer(subject)
+            room = PhongHoc.objects.get(pk=pk)
+            serializer = RoomSerializer(room)
             return ResponseFormat.response(data=serializer.data)
-        except Subject.DoesNotExist:
+        except PhongHoc.DoesNotExist:
             return ResponseFormat.response(data=None, case_name="NOT_FOUND", status=404)
     
     def put(self, request, pk):
         try:
-            subject = Subject.objects.get(pk=pk)
-            serializer = SubjectUpdateSerializer(subject, data=request.data)
+            room = PhongHoc.objects.get(pk=pk)
+            serializer = RoomUpdateSerializer(room, data=request.data)
             if serializer.is_valid():
                 serializer.save()
                 return ResponseFormat.response(data=serializer.data)
-            return ResponseFormat.response(data=None, message=serializer.errors, status=400)
-        except Subject.DoesNotExist:
+            return ResponseFormat.response(data=serializer.error_messages, case_name="ERROR", status=400)
+        except PhongHoc.DoesNotExist:
             return ResponseFormat.response(data=None, case_name="NOT_FOUND", status=404)
     
     def delete(self, request, pk):
         try:
-            subject = Subject.objects.get(pk=pk)
-            subject.is_deleted= True
-            subject.save()
+            room = PhongHoc.objects.get(pk=pk)
+            room.is_deleted= True
+            room.save()
             return ResponseFormat.response(data=None)
-        except Subject.DoesNotExist:
+        except PhongHoc.DoesNotExist:
             return ResponseFormat.response(data=None, case_name="NOT_FOUND", status=404)
-    

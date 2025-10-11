@@ -18,7 +18,7 @@ class TeacherView(APIView):
         if serializer.is_valid():
             serializer.save()
             return ResponseFormat.response(data=serializer.data, case_name="SUCCESS")
-        return ResponseFormat.response(data=serializer.errors, case_name="INVALID_INPUT")
+        return ResponseFormat.response(data=serializer.errors, case_name="INVALID_INPUT", status=500)
     
 
 class TeacherDetailView(APIView):
@@ -49,5 +49,6 @@ class TeacherDetailView(APIView):
         except Teacher.DoesNotExist:
             return ResponseFormat.response(data=None, case_name="NOT_FOUND")
         
-        teacher.delete()
+        teacher.is_deleted = True
+        teacher.save()
         return ResponseFormat.response(data=None)

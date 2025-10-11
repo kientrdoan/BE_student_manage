@@ -1,7 +1,7 @@
 from django.db import models
 
 class SinhVien(models.Model):
-    user = models.ForeignKey('TaiKhoan', db_column="user_id", related_name="sinh_vien", on_delete=models.CASCADE)
+    user = models.ForeignKey('TaiKhoan', db_column="user_id", on_delete=models.CASCADE, related_name="sinh_vien")
     class_student = models.ForeignKey('LopSinhVien', db_column="class_id", related_name="sinh_vien", on_delete=models.CASCADE)
     student_code = models.CharField(max_length=50)
     is_deleted = models.BooleanField(default=False)

@@ -19,25 +19,36 @@ class MajorView(APIView):
         if serializer.is_valid():
             serializer.save()
             return ResponseFormat.response(data=serializer.data)
-        return ResponseFormat.response(data=serializer.errors, status=400)
+        return ResponseFormat.response(data=serializer.errors, case_name="INVALID_INPUT", status=400)
     
-    def put(self, request):
+class MajorDetailView(APIView):
+    def get(self, request, pk):
         try:
-            major = Major.objects.get(pk=request.data.get("id"))
+            major = Major.objects.get(pk=pk)
         except Major.DoesNotExist:
-            return ResponseFormat.response(data=None, case_name="NOT_FOUND")
+            return ResponseFormat.response(data=None, case_name="NOT_FOUND", status=404)
+        
+        serializer = MajorDetailSerializer(major)
+        return ResponseFormat.response(data=serializer.data)
+    
+    def put(self, request, pk):
+        try:
+            major = Major.objects.get(pk=pk)
+        except Major.DoesNotExist:
+            return ResponseFormat.response(data=None, case_name="NOT_FOUND", status=404)
         
         serializer = MajorDetailSerializer(major, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return ResponseFormat.response(data=serializer.data)
-        return ResponseFormat.response(data=serializer.errors)
+        return ResponseFormat.response(data=serializer.errors, case_name="INVALID_INPUT", status=400)
     
     def delete(self, request, pk):
         try:
             major = Major.objects.get(pk=pk)
         except Major.DoesNotExist:
-            return ResponseFormat.error(message="Major not found")
+            return ResponseFormat.response(data=None, case_name="NOT_FOUND", status=404)
         
-        major.delete()
-        return ResponseFormat.success(data={"message": "Major deleted successfully"})
+        major.is_deleted= True
+        major.save()
+        return ResponseFormat.response(data=None, case_name="SUCCESS")
