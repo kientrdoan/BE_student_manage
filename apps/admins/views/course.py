@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 
 from apps.my_built_in.models.lop_tin_chi import LopTinChi as Course
 
-from apps.admins.serializers.course import CourseSerializer, CourseCreateUpdateSerializer
+from apps.admins.serializers.course import CourseSerializer, CourseCreateSerializer, CourseUpdateSerializer
 
 from apps.my_built_in.response import ResponseFormat
 
@@ -13,7 +13,7 @@ class CourseView(APIView):
         return ResponseFormat.response(data=serializer.data)
     
     def post(self, request):
-        serializer = CourseCreateUpdateSerializer(data=request.data)
+        serializer = CourseCreateSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return ResponseFormat.response(data=serializer.data, case_name="SUCCESS")
@@ -37,7 +37,7 @@ class CourseDetailView(APIView):
         course = self.get_object(pk)
         if course is None:
             return ResponseFormat.response(case_name="NOT_FOUND", status=404)
-        serializer = CourseCreateUpdateSerializer(course, data=request.data)
+        serializer = CourseUpdateSerializer(course, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return ResponseFormat.response(data=serializer.data, case_name="SUCCESS")
@@ -47,5 +47,6 @@ class CourseDetailView(APIView):
         course = self.get_object(pk)
         if course is None:
             return ResponseFormat.response(case_name="NOT_FOUND", status=404)
-        course.delete()
+        course.is_deleted = True
+        course.save()
         return ResponseFormat.response(case_name="SUCCESS")

@@ -8,3 +8,14 @@ class SemesterSerializer(serializers.ModelSerializer):
         model = HocKy
         fields = ['id', 'semesters', 'year', 'start_date', 'end_date', 'is_deleted', 'created_at', 'updated_at']
         read_only_fields = ['id']
+
+
+class SemesterCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HocKy
+        fields = ['semesters', 'year', 'start_date', 'end_date']
+
+class SemesterUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HocKy
+        fields = ['semesters', 'year', 'start_date', 'end_date', 'is_deleted']

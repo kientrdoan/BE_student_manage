@@ -38,8 +38,6 @@ class StudentDetailView(APIView):
         except Student.DoesNotExist:
             return ResponseFormat.response(data=None, case_name="NOT_FOUND")
         
-        print(request.data)
-        
         serializer = StudentUpdateSerializer(student, data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -52,7 +50,8 @@ class StudentDetailView(APIView):
         except Student.DoesNotExist:
             return ResponseFormat.response(data=None, case_name="NOT_FOUND")
         
-        student.delete()
+        student.is_deleted= True
+        student.save()
         return ResponseFormat.response(data=None, case_name="SUCCESS")
     
     

@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 
 from apps.my_built_in.models.hoc_ky import HocKy as Semester
 
-from apps.admins.serializers.semester import SemesterSerializer
+from apps.admins.serializers.semester import SemesterSerializer, SemesterCreateSerializer, SemesterUpdateSerializer
 
 from apps.my_built_in.response import ResponseFormat
 
@@ -13,7 +13,7 @@ class SemesterView(APIView):
         return ResponseFormat.response(data=serializer.data)
     
     def post(self, request):
-        serializer = SemesterSerializer(data=request.data)
+        serializer = SemesterCreateSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return ResponseFormat.response(data=serializer.data, case_name="SUCCESS")
@@ -37,7 +37,7 @@ class SemesterDetailView(APIView):
         semester = self.get_object(pk)
         if semester is None:
             return ResponseFormat.response(case_name="NOT_FOUND", status=404)
-        serializer = SemesterSerializer(semester, data=request.data)
+        serializer = SemesterUpdateSerializer(semester, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return ResponseFormat.response(data=serializer.data, case_name="SUCCESS")
@@ -47,5 +47,6 @@ class SemesterDetailView(APIView):
         semester = self.get_object(pk)
         if semester is None:
             return ResponseFormat.response(case_name="NOT_FOUND", status=404)
-        semester.delete()
+        semester.is_deleted = True
+        semester.save()
         return ResponseFormat.response(case_name="SUCCESS")

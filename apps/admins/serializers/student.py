@@ -44,22 +44,21 @@ class StudentUpdateSerializer(serializers.ModelSerializer):
     user = UserUpdateSerializer()
     class Meta:
         model = SinhVien
-        fields = ['id', 'student_code', 'class_student', 'user', 'is_deleted']
+        fields = ['student_code', 'class_student', 'user', 'is_deleted']
     
     def update(self, instance, validated_data):
-        # Lấy dữ liệu user
-        user_data = validated_data.pop('user', None)
+        user_data = validated_data.pop("user", None)
 
-        # Update Student trước
-        instance.student_code = validated_data.get('student_code', instance.student_code)
-        instance.class_student = validated_data.get('class_student', instance.class_student)
-        instance.save()
-
-        # Update User nếu có dữ liệu
         if user_data:
             user_instance = instance.user
-            user_serializer = UserUpdateSerializer(user_instance, data=user_data, partial=True)
+            user_serializer = UserUpdateSerializer(
+                user_instance, data=user_data, partial=True
+            )
             user_serializer.is_valid(raise_exception=True)
             user_serializer.save()
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
 
         return instance

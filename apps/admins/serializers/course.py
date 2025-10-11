@@ -7,6 +7,7 @@ class CourseSerializer(serializers.ModelSerializer):
     subject = serializers.SerializerMethodField()
     teacher = serializers.SerializerMethodField()
     class_st = serializers.SerializerMethodField()
+    room = serializers.SerializerMethodField()
     class Meta:
         model = Course
         fields = ['id', 'semester', 'subject', 'teacher', 'class_st', 'room', 'max_capacity', 'updated_at', 'created_at', 'is_deleted']
@@ -52,7 +53,21 @@ class CourseSerializer(serializers.ModelSerializer):
             }
         return None
     
-class CourseCreateUpdateSerializer(serializers.ModelSerializer):
+    def get_room(self, obj):
+        room = obj.room
+        if room:
+            return {
+                "id": room.id,
+                "room_code": room.room_code,
+            }
+        return None
+    
+class CourseCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Course
+        fields = ['semester', 'subject', 'teacher', 'class_st', 'room', 'max_capacity']
+
+class CourseUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
         fields = ['semester', 'subject', 'teacher', 'class_st', 'room', 'max_capacity', 'is_deleted']

@@ -1,27 +1,31 @@
 from django.urls import path
 
-from apps.admins.views.department import DepartmentView
-from apps.admins.views.major import MajorView
-from apps.admins.views.classes import ClassView
+from apps.admins.views.department import DepartmentView, DepartmentDetailView
+from apps.admins.views.major import MajorView, MajorDetailView
+from apps.admins.views.classes import ClassView, ClassDetailView
 from apps.admins.views.student import StudentView, StudentDetailView
 from apps.admins.views.teacher import TeacherView, TeacherDetailView
 from apps.admins.views.semester import SemesterView, SemesterDetailView
 from apps.admins.views.course import CourseView, CourseDetailView
 from apps.admins.views.subject import SubjectView, SubjectDetailView
+from apps.admins.views.room import RoomView, RoomDetailView
 
 # Department
 urlpatterns = [
     path('departments/', DepartmentView.as_view(), name='department-list'),
+    path('departments/<int:pk>', DepartmentDetailView.as_view(), name='department-detail'),
 ]
 
 # Major
 urlpatterns += [
     path('majors/', MajorView.as_view(), name='major-list'),
+    path('majors/<int:pk>', MajorDetailView.as_view(), name='major-detail'),
 ]
 
 # Class
 urlpatterns += [
     path('classes/', ClassView.as_view(), name='class-list'),
+    path('classes/<int:pk>', ClassDetailView.as_view(), name='class-detail'),
 ]
 
 # Student
@@ -52,4 +56,10 @@ urlpatterns += [
 urlpatterns += [
     path('subjects/', SubjectView.as_view(), name='course-list'),
     path('subjects/<int:pk>', SubjectDetailView.as_view(), name='course-detail'),
+]
+
+# Room
+urlpatterns += [
+    path('rooms/', RoomView.as_view(), name='room-list'),
+    path('rooms/<int:pk>', RoomDetailView.as_view(), name='room-detail'),
 ]
