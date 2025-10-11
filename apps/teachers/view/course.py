@@ -1,13 +1,13 @@
 from rest_framework.views import APIView
 
-from apps.my_built_in.models.course import Course
+from apps.my_built_in.models.lop_tin_chi import LopTinChi
 from apps.my_built_in.response import ResponseFormat
 from apps.teachers.serializers.course import CourseDetailSerializer
 
 
 class CourseView(APIView):
     def getByTeacherID(self, teacher_id):
-        courses = Course.objects.filter(teacher_id=teacher_id)
+        courses = LopTinChi.objects.filter(teacher_id=teacher_id)
         serializer = CourseDetailSerializer(courses, many=True)
         return ResponseFormat.response(data=serializer.data, case_name="SUCCESS")
 
