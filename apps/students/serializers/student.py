@@ -1,6 +1,9 @@
 from rest_framework import serializers
 
-class StudentDetailSerializer(serializers.Serializer):
+from apps.my_built_in.models.sinh_vien import SinhVien
 
+
+class StudentDetailSerializer(serializers.Serializer):
     class Meta:
-        fields = ['id', 'user', 'enrolled_courses']
+        model = SinhVien
+        fields = ['id', 'student_code', 'class_id', 'user_id']
