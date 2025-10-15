@@ -2,3 +2,4 @@ venv
 venv/*
 .env.local
 __pycache__/
+.idea
