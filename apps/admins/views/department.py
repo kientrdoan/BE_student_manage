@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 # model
 from apps.my_built_in.models.khoa import Khoa as Department
 
-# serializer
+# serializers
 from apps.admins.serializers.department import DepartmentDetailSerializer
 
 from apps.my_built_in.response import ResponseFormat
