@@ -1,7 +1,16 @@
 from rest_framework.views import APIView
 
-from apps.my_built_in.models.student import Student
+from apps.my_built_in.models.sinh_vien import SinhVien
+from apps.my_built_in.response import ResponseFormat
+from apps.students.serializers.student import StudentDetailSerializer
+
 
 class StudentView(APIView):
-    def getStudentById(self, student_id):
-        student = Student.objects.get(id=student_id)
+    def get(self, request ,id):
+        try:
+            student = SinhVien.objects.get(id=id)
+        except SinhVien.DoesNotExist:
+            return ResponseFormat.response(data=None, case_name="NOT_FOUND", status=404)
+        serializer = StudentDetailSerializer(student)
+        return ResponseFormat.response(data=serializer.data)
+
