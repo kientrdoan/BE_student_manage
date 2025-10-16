@@ -1,16 +1,14 @@
 from rest_framework import serializers
 
-from apps.my_built_in.models.sinh_vien import SinhVien
-from apps.my_built_in.models.tai_khoan import TaiKhoan
+from apps.my_built_in.models.giao_vien import GiaoVien 
+from apps.authens.serializers.user import UserUpdateSerializer
 
-from apps.authens.serializers.user import UserCreateSerializer, UserUpdateSerializer
-
-class StudentDetailSerializer(serializers.ModelSerializer):
+class TeacherDetailSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField()
-    class_student = serializers.SerializerMethodField()
+    department= serializers.SerializerMethodField()
     class Meta:
-        model = SinhVien
-        fields = ['id', 'student_code', 'class_student', 'user', 'is_deleted']
+        model = GiaoVien
+        fields = ['id', "teacher_code", "degree", "title", "department", "user", "start_date", "end_date", "is_deleted"]
     
     def get_user(self, obj):
         user = obj.user
@@ -29,32 +27,21 @@ class StudentDetailSerializer(serializers.ModelSerializer):
             }
         return None
     
-    def get_class_student(self, obj):
-        class_student = obj.class_student
-        if class_student:
+    def get_department(self, obj):
+        department = obj.department
+        if department:
             return {
-                "id": class_student.id,
-                "name": class_student.name,
+                "id": department.id,
+                "code": department.code,
+                "name": department.name
             }
         return None
     
-class StudentCreateSerializer(serializers.ModelSerializer):
-    user = UserCreateSerializer()
-    class Meta:
-        model = SinhVien
-        fields = ['id', 'student_code', 'class_student', 'user']
-    
-    def create(self, validated_data):
-        user_data = validated_data.pop('user')
-        user = UserCreateSerializer().create(user_data)
-        student = SinhVien.objects.create(user=user, **validated_data)
-        return student
-    
-class StudentUpdateSerializer(serializers.ModelSerializer):
+class TeacherUpdateSerializer(serializers.ModelSerializer):
     user = UserUpdateSerializer()
     class Meta:
-        model = SinhVien
-        fields = ['student_code', 'class_student', 'user', 'is_deleted']
+        model = GiaoVien
+        fields = ["teacher_code", "degree", "title", "department", "user", "start_date", "end_date", "is_deleted"]
     
     def update(self, instance, validated_data):
         user_data = validated_data.pop("user", None)

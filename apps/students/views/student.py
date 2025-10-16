@@ -13,3 +13,4 @@ class StudentView(APIView):
             return ResponseFormat.response(data=None, case_name="NOT_FOUND", status=404)
         serializer = StudentDetailSerializer(student)
         return ResponseFormat.response(data=serializer.data)
+

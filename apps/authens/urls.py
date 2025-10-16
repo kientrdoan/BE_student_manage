@@ -14,5 +14,5 @@ urlpatterns += [
 ]
 
 urlpatterns += [
-    path('users', UserProfile.as_view(), name='profile'),
+    path('users/<int:pk>', UserProfile.as_view(), name='profile'),
 ]
