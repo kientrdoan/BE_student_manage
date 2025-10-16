@@ -8,7 +8,8 @@ from apps.students.serializers.student import StudentDetailSerializer
 class StudentView(APIView):
     def get(self, request ,id):
         try:
-            student = SinhVien.objects.get(id=id)
+            print(id)
+            student = SinhVien.objects.get(user_id=id)
         except SinhVien.DoesNotExist:
             return ResponseFormat.response(data=None, case_name="NOT_FOUND", status=404)
         serializer = StudentDetailSerializer(student)
