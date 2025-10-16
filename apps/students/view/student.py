@@ -6,7 +6,10 @@ from apps.students.serializers.student import StudentDetailSerializer
 
 
 class StudentView(APIView):
-    def getStudentById(self, student_id):
-        student = SinhVien.objects.filter(id=student_id, is_deleted=False).first()
+    def get(self, request ,id):
+        try:
+            student = SinhVien.objects.get(id=id)
+        except SinhVien.DoesNotExist:
+            return ResponseFormat.response(data=None, case_name="NOT_FOUND", status=404)
         serializer = StudentDetailSerializer(student)
-        return ResponseFormat.response(data=serializer.data, case_name="SUCCESS")
+        return ResponseFormat.response(data=serializer.data)

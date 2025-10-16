@@ -5,5 +5,5 @@ from apps.students.view.subject import SubjectView
 
 urlpatterns = [
     path('subjects/', SubjectView.as_view(), name='subject-list'),
-    path('profile/<int:student_id>/', StudentView.as_view(), name='student-profile')
+    path('profile/<int:id>', StudentView.as_view(), name='student-profile')
 ]
