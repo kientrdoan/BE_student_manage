@@ -21,13 +21,12 @@ class UserView(views.APIView):
         return ResponseFormat.response(data=serializer.data, case_name="SUCCESS")
     
 class UserProfile(views.APIView):
-    permission_classes = [IsAuthenticated, IsTeacher]
-    def get(self, request):
+    permission_classes = [IsAuthenticated]
+    def get(self, request, pk):
         user = request.data
-        id = user.get("id")
-        if id:
+        if pk:
             try:
-                user = User.objects.get(id=id)
+                user = User.objects.get(id=pk)
             except User.DoesNotExist:
                 raise NotFound()
             serializers = UserDetailSerializer(user)

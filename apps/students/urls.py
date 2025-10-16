@@ -7,3 +7,4 @@ urlpatterns = [
     path('subjects/', SubjectView.as_view(), name='subject-list'),
     path('profile/<int:id>', StudentView.as_view(), name='student-profile')
 ]
+
