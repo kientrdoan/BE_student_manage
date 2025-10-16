@@ -6,7 +6,7 @@ from apps.students.views.student import StudentView
 from apps.students.views.subject import SubjectView
 
 urlpatterns = [
-    path('subjects/', SubjectView.as_view(), name='subject-list'),
+    path('subjects/<int:user_id>/', SubjectView.as_view(), name='subject-list'),
     path('profile/<int:id>', StudentView.as_view(), name='student-profile'),
     path('courses/<int:student_id>/', CourseView.as_view(), name='course-detail'),
     path('enrollments/<int:student_id>/', EnrollmentView.as_view(), name='enrollment-detail'),
