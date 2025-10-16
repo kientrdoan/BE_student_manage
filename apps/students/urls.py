@@ -1,7 +1,7 @@
 from django.urls import path
 
-from apps.students.view.student import StudentView
-from apps.students.view.subject import SubjectView
+from apps.students.views.student import StudentView
+from apps.students.views.subject import SubjectView
 
 urlpatterns = [
     path('subjects/', SubjectView.as_view(), name='subject-list'),
