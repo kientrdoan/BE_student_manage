@@ -6,10 +6,10 @@ from apps.students.serializers.student import StudentDetailSerializer
 
 
 class StudentView(APIView):
-    def get(self, request ,id):
+    def get(self, request, id):
         try:
             print(id)
-            student = SinhVien.objects.get(user_id=id)
+            student = SinhVien.objects.get(user__id=id)
         except SinhVien.DoesNotExist:
             return ResponseFormat.response(data=None, case_name="NOT_FOUND", status=404)
         serializer = StudentDetailSerializer(student)
