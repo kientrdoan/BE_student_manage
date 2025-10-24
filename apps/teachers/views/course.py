@@ -7,7 +7,7 @@ from apps.teachers.serializers.course import CourseSerializer
 from apps.my_built_in.response import ResponseFormat
 
 class CourseByTeacherView(APIView):
-    def get(self, request, user_id= None, semester_id = None):
+    def get(self, request, user_id= None):
         try:
             courses = courses = LopTinChi.objects.filter(teacher__user__id = user_id)
             serializers = serializers = CourseSerializer(courses, many= True)

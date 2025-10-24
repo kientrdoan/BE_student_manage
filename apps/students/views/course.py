@@ -5,6 +5,7 @@ from apps.my_built_in.models.lop_tin_chi import LopTinChi as Course
 from apps.my_built_in.models.sinh_vien import SinhVien
 from apps.students.serializers.course import CourseDetailSerializer
 from apps.my_built_in.response import ResponseFormat
+
 class CourseView(APIView):
     def get(self, request, class_id, semester_id):
         try:
