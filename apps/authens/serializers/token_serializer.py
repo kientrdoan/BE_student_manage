@@ -8,8 +8,15 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         token = super().get_token(user)
 
         token['name'] = str(user.last_name) + " " + str(user.first_name)
-        token['role'] = user.role        
-       
+        token['role'] = user.role
+
+        sinh_vien = getattr(user, 'sinh_vien', None)
+        if sinh_vien and hasattr(sinh_vien, 'first'):
+            sinh_vien = sinh_vien.first() 
+        if sinh_vien:
+            token['class_student'] = sinh_vien.class_student.id
+        else:
+            token['class_student'] = None
 
         return token
     

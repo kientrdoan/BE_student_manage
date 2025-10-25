@@ -11,4 +11,3 @@ class SemesterView(APIView):
         semesters = Semester.objects.all().order_by('-start_date')
         serializer = SemesterSerializer(semesters, many=True)
         return ResponseFormat.response(data=serializer.data)
-        
