@@ -8,7 +8,7 @@ from apps.my_built_in.response import ResponseFormat
 
 class SemesterView(APIView):
     def get(self, request):
-        semesters = Semester.objects.all()
+        semesters = Semester.objects.filter(is_deleted = False)
         serializer = SemesterSerializer(semesters, many=True)
         return ResponseFormat.response(data=serializer.data)
     

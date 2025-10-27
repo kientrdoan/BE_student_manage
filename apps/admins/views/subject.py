@@ -10,7 +10,7 @@ from apps.my_built_in.response import ResponseFormat
 
 class SubjectView(APIView):
     def get(self, request):
-        subjects = Subject.objects.all()
+        subjects = Subject.objects.filter(is_deleted = False)
         serializer = SubjectSerializer(subjects, many=True)
         return ResponseFormat.response(data=serializer.data)
     

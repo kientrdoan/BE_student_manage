@@ -9,7 +9,7 @@ from apps.my_built_in.response import ResponseFormat
 
 class TeacherView(APIView):
     def get(self, request):
-        students = Teacher.objects.all()
+        students = Teacher.objects.filter(is_deleted = False)
         serializer = TeacherDetailSerializer(students, many=True)
         return ResponseFormat.response(data=serializer.data, case_name="SUCCESS")
 
