@@ -7,13 +7,16 @@ from apps.admins.serializers.student import StudentDetailSerializer, StudentCrea
 
 from apps.my_built_in.response import ResponseFormat
 
+from rest_framework.parsers import MultiPartParser, FormParser
+
 class StudentView(APIView):
+    parser_classes = [MultiPartParser, FormParser]
     def get(self, request):
         students = Student.objects.filter(is_deleted = False)
         serializer = StudentDetailSerializer(students, many=True)
         return ResponseFormat.response(data=serializer.data, case_name="SUCCESS")
 
-    def post(self, request):
+    def post(self, request): 
         serializer = StudentCreateSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()

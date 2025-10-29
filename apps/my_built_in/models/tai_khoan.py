@@ -30,7 +30,7 @@ class TaiKhoan(AbstractBaseUser):
     identity_number = models.CharField(max_length=12, null=True, blank=True)
     birthday = models.DateField(null=True, blank=True)
     gender = models.CharField(max_length=1, null=True, blank=True)
-    url = models.CharField(max_length=156, null=True, blank=True)
+    url = models.ImageField(upload_to='avatars/', null=True, blank=True)
     vector_embedding = models.CharField(max_length=156, null=True, blank=True)
     role = models.CharField(max_length=20, null=True, blank=True)
     is_active = models.BooleanField(default=True)
