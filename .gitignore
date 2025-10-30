@@ -3,3 +3,5 @@ venv/*
 .env.local
 __pycache__/
 .idea
+media
+media/*
