@@ -10,7 +10,7 @@ class CourseSerializer(serializers.ModelSerializer):
     room = serializers.SerializerMethodField()
     class Meta:
         model = Course
-        fields = ['id', 'semester', 'subject', 'teacher', 'class_st', 'room', 'max_capacity', 'start_date', 'end_date', 'weekday', 'updated_at', 'created_at', 'is_deleted']
+        fields = ['id', 'semester', 'subject', 'teacher', 'class_st', 'room', 'max_capacity', 'start_date', 'end_date', 'weekday', 'start_period', 'updated_at', 'created_at', 'is_deleted']
         read_only_fields = ['id', 'updated_at', 'created_at']
 
     def get_semester(self, obj):
@@ -33,16 +33,16 @@ class CourseSerializer(serializers.ModelSerializer):
             }
         return None
     
-    def get_teacher(self, obj):
-        teacher = obj.teacher
-        if teacher:
-            return {
-                "id": teacher.id,
-                "teacher_code": teacher.teacher_code,
-                "degree": teacher.degree,
-                "name": f"{teacher.user.first_name} {teacher.user.last_name}" if teacher.user else "",
-            }
-        return None
+    # def get_teacher(self, obj):
+    #     teacher = obj.teacher
+    #     if teacher:
+    #         return {
+    #             "id": teacher.id,
+    #             "teacher_code": teacher.teacher_code,
+    #             "degree": teacher.degree,
+    #             "name": f"{teacher.user.first_name} {teacher.user.last_name}" if teacher.user else "",
+    #         }
+    #     return None
     
     def get_class_st(self, obj):
         class_st = obj.class_st
@@ -65,9 +65,9 @@ class CourseSerializer(serializers.ModelSerializer):
 class CourseCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
-        fields = ['semester', 'subject', 'teacher', 'class_st', 'room', 'max_capacity', 'start_date', 'end_date', 'weekday']
+        fields = ['semester', 'subject', 'teacher', 'class_st', 'room', 'max_capacity', 'start_date', 'end_date', 'weekday', 'start_period']
 
 class CourseUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
-        fields = ['semester', 'subject', 'teacher', 'class_st', 'room', 'max_capacity', 'start_date', 'end_date', 'weekday', 'is_deleted']
+        fields = ['semester', 'subject', 'teacher', 'class_st', 'room', 'max_capacity', 'start_date', 'end_date', 'weekday', 'start_period', 'is_deleted']

@@ -10,7 +10,7 @@ from apps.my_built_in.response import ResponseFormat
 
 class DepartmentView(APIView):
     def get(self, request):
-        departments = Department.objects.all()
+        departments = Department.objects.filter(is_deleted = False)
         serializer = DepartmentDetailSerializer(departments, many=True)
         return ResponseFormat.response(data=serializer.data, case_name="SUCCESS")
 

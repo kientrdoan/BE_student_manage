@@ -8,7 +8,7 @@ from apps.my_built_in.response import ResponseFormat
 
 class CourseView(APIView):
     def get(self, request):
-        courses = Course.objects.all()
+        courses = Course.objects.filter(is_deleted = False)
         serializer = CourseSerializer(courses, many=True)
         return ResponseFormat.response(data=serializer.data)
     

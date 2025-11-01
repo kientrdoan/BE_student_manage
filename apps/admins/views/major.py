@@ -10,7 +10,7 @@ from apps.my_built_in.response import ResponseFormat
 
 class MajorView(APIView):
     def get(self, request):
-        majors = Major.objects.all()
+        majors = Major.objects.filter(is_deleted = False)
         serializer = MajorDetailSerializer(majors, many=True)
         return ResponseFormat.response(data=serializer.data)
 

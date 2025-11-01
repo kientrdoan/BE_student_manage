@@ -8,7 +8,7 @@ from apps.my_built_in.response import ResponseFormat
 
 class RoomView(APIView):
     def get(self, request):
-        rooms = PhongHoc.objects.all()
+        rooms = PhongHoc.objects.filter(is_active = False)
         serializer = RoomSerializer(rooms, many=True)
         return ResponseFormat.response(data=serializer.data)
     
@@ -42,7 +42,7 @@ class RoomDetailView(APIView):
     def delete(self, request, pk):
         try:
             room = PhongHoc.objects.get(pk=pk)
-            room.is_deleted= True
+            room.is_active = True
             room.save()
             return ResponseFormat.response(data=None)
         except PhongHoc.DoesNotExist:
