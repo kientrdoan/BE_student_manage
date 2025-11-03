@@ -33,16 +33,16 @@ class CourseSerializer(serializers.ModelSerializer):
             }
         return None
     
-    # def get_teacher(self, obj):
-    #     teacher = obj.teacher
-    #     if teacher:
-    #         return {
-    #             "id": teacher.id,
-    #             "teacher_code": teacher.teacher_code,
-    #             "degree": teacher.degree,
-    #             "name": f"{teacher.user.first_name} {teacher.user.last_name}" if teacher.user else "",
-    #         }
-    #     return None
+    def get_teacher(self, obj):
+        teacher = getattr(obj, "teacher", None)
+        if teacher:
+            return {
+                "id": teacher.id,
+                "teacher_code": teacher.teacher_code,
+                "degree": teacher.degree,
+                "name": f"{teacher.user.first_name} {teacher.user.last_name}" if teacher.user else "",
+            }
+        return None
     
     def get_class_st(self, obj):
         class_st = obj.class_st
@@ -54,7 +54,7 @@ class CourseSerializer(serializers.ModelSerializer):
         return None
     
     def get_room(self, obj):
-        room = obj.room
+        room = getattr(obj, "room", None)
         if room:
             return {
                 "id": room.id,
@@ -65,7 +65,7 @@ class CourseSerializer(serializers.ModelSerializer):
 class CourseCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
-        fields = ['semester', 'subject', 'teacher', 'class_st', 'room', 'max_capacity', 'start_date', 'end_date', 'weekday', 'start_period']
+        fields = ['semester', 'subject', 'class_st', 'max_capacity', 'start_date', 'end_date']
 
 class CourseUpdateSerializer(serializers.ModelSerializer):
     class Meta:

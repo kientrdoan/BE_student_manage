@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
+import os
+from datetime import datetime
 
 
 class MyUserManager(BaseUserManager):
@@ -20,6 +22,24 @@ class MyUserManager(BaseUserManager):
         return self.create_user(email, password, **extra_fields)
 
 
+def avatar_upload_path(instance, filename):
+    # Lấy phần mở rộng file
+    ext = filename.split('.')[-1]
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+
+    print("Instance:", instance)
+
+    student_code = instance.sinh_vien.first().student_code if instance.sinh_vien.exists() else None
+
+    if not student_code:
+        # fallback nếu chưa có mã sinh viên
+        student_code = "unknown"
+
+    # Tạo tên file mới
+    new_filename = f"{student_code}_{timestamp}.{ext}"
+
+    return os.path.join('avatars', new_filename)
+
 class TaiKhoan(AbstractBaseUser):
     email = models.CharField(max_length=50, unique=True,)
     first_name = models.CharField(max_length=50, null=True, blank=True)
@@ -30,7 +50,7 @@ class TaiKhoan(AbstractBaseUser):
     identity_number = models.CharField(max_length=12, null=True, blank=True)
     birthday = models.DateField(null=True, blank=True)
     gender = models.CharField(max_length=1, null=True, blank=True)
-    url = models.CharField(max_length=156, null=True, blank=True)
+    url = models.ImageField(upload_to='avatars', null=True, blank=True)
     vector_embedding = models.CharField(max_length=156, null=True, blank=True)
     role = models.CharField(max_length=20, null=True, blank=True)
     is_active = models.BooleanField(default=True)
@@ -44,6 +64,3 @@ class TaiKhoan(AbstractBaseUser):
 
     class Meta:
         db_table = "tai_khoan"
-
-    def __str__(self):
-        return self.email
