@@ -6,7 +6,7 @@ class ThamDu(models.Model):
 
     status = models.CharField(max_length=50)
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    update_at = models.DateTimeField(auto_now=True)
     is_deleted = models.BooleanField(default=False)
 
 
@@ -14,4 +14,4 @@ class ThamDu(models.Model):
         db_table = 'tham_du'
 
     def __str__(self):
-        return f"{self.student} - {self.time_slot} - {self.status}"
+        return f"{self.time_slot} - {self.status}"

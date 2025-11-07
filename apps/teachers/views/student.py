@@ -8,7 +8,10 @@ from apps.my_built_in.response import ResponseFormat
 class StudentView(APIView):
     def get(self, request, course_id= None):
         try:
-            students = SinhVien.objects.filter(course__id = course_id)
+            students = SinhVien.objects.filter(
+                dang_ky__course__id=course_id,
+                dang_ky__is_deleted=False
+            ).distinct()
             serializers = StudentSerializer(students, many= True)
             return ResponseFormat.response(data=serializers.data)
         except SinhVien.DoesNotExist as e:

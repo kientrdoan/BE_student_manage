@@ -21,6 +21,6 @@ class StudentSerializer(serializers.ModelSerializer):
                 "identity_number": user.identity_number,
                 "birthday": user.birthday,
                 "gender": user.gender,
-                "url": user.url
+                "url": user.url.url if user.url and hasattr(user.url, 'url') else None,
             }
         return None

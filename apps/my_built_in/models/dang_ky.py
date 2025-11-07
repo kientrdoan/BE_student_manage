@@ -8,6 +8,11 @@ class DangKy(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     is_deleted = models.BooleanField(default=False)
 
+    mid_score = models.FloatField(null=True, blank=True)
+    final_score = models.FloatField(null=True, blank=True)
+    attendance_score = models.FloatField(null=True, blank=True)
+    exercise_score = models.FloatField(null=True, blank=True)
+
     class Meta:
         db_table = "dang_ky"
 

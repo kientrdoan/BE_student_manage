@@ -25,4 +25,12 @@ class CourseByTeacherAndSemesterView(APIView):
         except LopTinChi.DoesNotExist as e:
             return ResponseFormat.response(data=None, case_name="NOT_FOUND")
 
-        
+class CourseDetailView(APIView):
+    def get(self, request, course_id= None):
+        try:
+            courses = courses = LopTinChi.objects.get(id = course_id)
+            serializers = serializers = CourseSerializer(courses)
+        except LopTinChi.DoesNotExist as e:
+            return ResponseFormat.response(data=None, case_name="NOT_FOUND")
+
+        return ResponseFormat.response(serializers.data)

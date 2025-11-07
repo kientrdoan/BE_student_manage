@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from apps.my_built_in.models.lop_tin_chi import LopTinChi
 
-class CourseDetailSerializer(serializers.ModelSerializer):
+class CourseSerializer(serializers.ModelSerializer):
 
     subject = serializers.SerializerMethodField()
     teacher = serializers.SerializerMethodField()
@@ -41,10 +41,17 @@ class CourseDetailSerializer(serializers.ModelSerializer):
                 }
             }
         return None
+    
     def get_room(self, obj):
         room = obj.room
-        if room:
+        if room is not None and hasattr(room, "room_code"):
             return {
                 "room_code": room.room_code,
             }
         return None
+
+
+class CourseDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LopTinChi
+        fields = ['id', 'start_date', 'end_date', 'weekday']

@@ -2,7 +2,7 @@ from django.db import models
 
 class BuoiHoc(models.Model):
     course= models.ForeignKey('LopTinChi', on_delete=models.CASCADE, related_name='buoi_hoc')
-    start_period= models.IntegerField()
+    # start_period= models.IntegerField()
     date = models.DateField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -12,4 +12,4 @@ class BuoiHoc(models.Model):
         db_table = 'buoi_hoc'
 
     def __str__(self):
-        return f"{self.start_time} - {self.end_time}"
+        return f"{self.date}"
