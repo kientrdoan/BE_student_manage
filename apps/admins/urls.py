@@ -3,6 +3,7 @@ from django.urls import path
 from apps.admins.views.department import DepartmentView, DepartmentDetailView
 from apps.admins.views.major import MajorView, MajorDetailView
 from apps.admins.views.classes import ClassView, ClassDetailView
+from apps.admins.views.schedule import ScheduleView, ScheduleStatusView, ScheduleResetView
 from apps.admins.views.student import StudentView, StudentDetailView
 from apps.admins.views.teacher import TeacherView, TeacherDetailView
 from apps.admins.views.semester import SemesterView, SemesterDetailView
@@ -62,4 +63,10 @@ urlpatterns += [
 urlpatterns += [
     path('rooms/', RoomView.as_view(), name='room-list'),
     path('rooms/<int:pk>', RoomDetailView.as_view(), name='room-detail'),
+]
+
+urlpatterns += [
+    path('schedule/', ScheduleView.as_view()),
+    path('schedule/status/<int:semester_id>/', ScheduleStatusView.as_view()),
+    path('schedule/reset/<int:semester_id>/', ScheduleResetView.as_view()),
 ]
