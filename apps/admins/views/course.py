@@ -7,11 +7,17 @@ from apps.admins.serializers.course import CourseSerializer, CourseCreateSeriali
 from apps.my_built_in.response import ResponseFormat
 
 class CourseView(APIView):
-    def get(self, request):
-        courses = Course.objects.filter(is_deleted = False)
+    # def get(self, request):
+    #     courses = Course.objects.filter(is_deleted = False)
+    #     serializer = CourseSerializer(courses, many=True)
+    #     return ResponseFormat.response(data=serializer.data)
+
+    def get(self, request, semester_id=None):
+        courses = Course.objects.filter(semester__id = semester_id, is_deleted = False)
         serializer = CourseSerializer(courses, many=True)
         return ResponseFormat.response(data=serializer.data)
     
+class CourseCreateView(APIView):
     def post(self, request):
         serializer = CourseCreateSerializer(data=request.data)
         if serializer.is_valid():

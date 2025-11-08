@@ -8,7 +8,7 @@ from apps.my_built_in.response import ResponseFormat
 
 class RoomView(APIView):
     def get(self, request):
-        rooms = PhongHoc.objects.filter(is_active = False)
+        rooms = PhongHoc.objects.filter(is_active = True)
         serializer = RoomSerializer(rooms, many=True)
         return ResponseFormat.response(data=serializer.data)
     

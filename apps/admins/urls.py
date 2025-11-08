@@ -6,8 +6,8 @@ from apps.admins.views.classes import ClassView, ClassDetailView
 from apps.admins.views.schedule import ScheduleView, ScheduleStatusView, ScheduleResetView
 from apps.admins.views.student import StudentView, StudentDetailView
 from apps.admins.views.teacher import TeacherView, TeacherDetailView
-from apps.admins.views.semester import SemesterView, SemesterDetailView
-from apps.admins.views.course import CourseView, CourseDetailView
+from apps.admins.views.semester import SemesterView, SemesterDetailView, CurrentSemesterView
+from apps.admins.views.course import CourseView, CourseDetailView, CourseCreateView
 from apps.admins.views.subject import SubjectView, SubjectDetailView
 from apps.admins.views.room import RoomView, RoomDetailView
 
@@ -45,11 +45,13 @@ urlpatterns += [
 urlpatterns += [
     path('semesters/', SemesterView.as_view(), name='semester-list'),
     path('semesters/<int:pk>', SemesterDetailView.as_view(), name='semester-detail'),
+    path('current-semesters', CurrentSemesterView.as_view(), name='semester-detail'),
 ]
 
 #Course
 urlpatterns += [
-    path('courses/', CourseView.as_view(), name='course-list'),
+    path('courses/', CourseCreateView.as_view(), name='course-list'),
+    path('courses/<int:semester_id>', CourseView.as_view(), name='course-list'),
     path('courses/<int:pk>', CourseDetailView.as_view(), name='course-detail'),
 ]
 
