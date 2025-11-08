@@ -6,3 +6,6 @@ __pycache__/
 media
 media/*
 /media
+
+apps/admins/services/run_ga_test.py
+apps/admins/services/fake_data.py

@@ -15,6 +15,7 @@ class TeacherView(APIView):
 
     def post(self, request):
         serializer = TeacherCreateSerializer(data=request.data)
+        print(request.data)
         if serializer.is_valid():
             serializer.save()
             return ResponseFormat.response(data=serializer.data, case_name="SUCCESS")
