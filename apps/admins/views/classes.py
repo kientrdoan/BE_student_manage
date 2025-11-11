@@ -4,14 +4,18 @@ from rest_framework.views import APIView
 from apps.my_built_in.models.lop_sinh_vien import LopSinhVien as Class
 
 # serializer
-from apps.admins.serializers.classes import ClassDetailSerializer, ClassCreateSerializer, ClassUpdateSerializer
+from apps.admins.serializers.classes import ClassDetailSerializer, ClassListSerializer, ClassCreateSerializer, ClassUpdateSerializer
 
 from apps.my_built_in.response import ResponseFormat
 
 class ClassView(APIView):
     def get(self, request):
-        classes = Class.objects.filter(is_deleted = False)
-        serializer = ClassDetailSerializer(classes, many=True)
+        is_deleted = request.GET.get("is_deleted")
+        if is_deleted is not None:
+            classes = Class.objects.filter(is_deleted = is_deleted)
+        else:
+            classes = Class.objects.all()
+        serializer = ClassListSerializer(classes, many=True)
         return ResponseFormat.response(data=serializer.data, case_name="SUCCESS")
 
     def post(self, request):

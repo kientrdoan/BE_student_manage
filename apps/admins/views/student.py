@@ -12,7 +12,11 @@ from rest_framework.parsers import MultiPartParser, FormParser
 class StudentView(APIView):
     parser_classes = [MultiPartParser, FormParser]
     def get(self, request):
-        students = Student.objects.filter(is_deleted = False)
+        is_deleted = request.GET.get("is_deleted")
+        if is_deleted is not None:
+            students = Student.objects.filter(is_deleted = is_deleted)
+        else:
+            students = Student.objects.all()
         serializer = StudentDetailSerializer(students, many=True)
         return ResponseFormat.response(data=serializer.data, case_name="SUCCESS")
 

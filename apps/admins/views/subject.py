@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 
 from apps.my_built_in.models.mon_hoc import MonHoc as Subject
 
-from apps.admins.serializers.subject import SubjectSerializer, SubjectCreateSerializer, SubjectUpdateSerializer
+from apps.admins.serializers.subject import SubjectSerializer, SubjectListSerializer, SubjectCreateSerializer, SubjectUpdateSerializer
 
 
 from apps.my_built_in.response import ResponseFormat
@@ -10,8 +10,12 @@ from apps.my_built_in.response import ResponseFormat
 
 class SubjectView(APIView):
     def get(self, request):
-        subjects = Subject.objects.filter(is_deleted = False)
-        serializer = SubjectSerializer(subjects, many=True)
+        is_deleted = request.GET.get("is_deleted", None)
+        if is_deleted is not None:
+            subjects = Subject.objects.filter(is_deleted = is_deleted)
+        else:
+            subjects = Subject.objects.all()
+        serializer = SubjectListSerializer(subjects, many=True)
         return ResponseFormat.response(data=serializer.data)
     
     def post(self, request):

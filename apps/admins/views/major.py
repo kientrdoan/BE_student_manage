@@ -4,14 +4,18 @@ from rest_framework.views import APIView
 from apps.my_built_in.models.nganh import Nganh as Major
 
 # serializers
-from apps.admins.serializers.major import MajorDetailSerializer
+from apps.admins.serializers.major import MajorDetailSerializer, MajorListSerializer
 
 from apps.my_built_in.response import ResponseFormat
 
 class MajorView(APIView):
     def get(self, request):
-        majors = Major.objects.filter(is_deleted = False)
-        serializer = MajorDetailSerializer(majors, many=True)
+        is_deleted = request.GET.get("is_deleted", None)
+        if is_deleted is not None:
+            majors = Major.objects.filter(is_deleted = is_deleted)
+        else:
+            majors = Major.objects.all()
+        serializer = MajorListSerializer(majors, many=True)
         return ResponseFormat.response(data=serializer.data)
 
     def post(self, request):

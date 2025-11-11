@@ -13,7 +13,11 @@ class CourseView(APIView):
     #     return ResponseFormat.response(data=serializer.data)
 
     def get(self, request, semester_id=None):
-        courses = Course.objects.filter(semester__id = semester_id, is_deleted = False)
+        is_deleted = request.GET.get("is_deleted", None)
+        if is_deleted is not None:
+            courses = Course.objects.filter(semester__id = semester_id, is_deleted = is_deleted)
+        else:
+            courses = Course.objects.filter(semester__id = semester_id)
         serializer = CourseSerializer(courses, many=True)
         return ResponseFormat.response(data=serializer.data)
     

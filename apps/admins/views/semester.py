@@ -9,7 +9,11 @@ from apps.my_built_in.response import ResponseFormat
 
 class SemesterView(APIView):
     def get(self, request):
-        semesters = Semester.objects.filter(is_deleted = False)
+        is_deleted = request.GET.get("is_deleted")
+        if is_deleted is not None:
+            semesters = Semester.objects.filter(is_deleted = is_deleted)
+        else:
+            semesters = Semester.objects.all()
         serializer = SemesterSerializer(semesters, many=True)
         return ResponseFormat.response(data=serializer.data)
     

@@ -8,7 +8,11 @@ from apps.my_built_in.response import ResponseFormat
 
 class RoomView(APIView):
     def get(self, request):
-        rooms = PhongHoc.objects.filter(is_active = True)
+        is_active = request.GET.get("is_active", None)
+        if is_active is not None:
+            rooms = PhongHoc.objects.filter(is_active = is_active)
+        else:
+            rooms = PhongHoc.objects.all()
         serializer = RoomSerializer(rooms, many=True)
         return ResponseFormat.response(data=serializer.data)
     

@@ -63,6 +63,7 @@ class ScheduleView(APIView):
         validated_data = serializer.validated_data
         semester_id = validated_data['semester_id']
         excel_file = validated_data.get('excel_file')
+        print(validated_data)
 
         try:
             # Parse hard assignments từ Excel nếu có
