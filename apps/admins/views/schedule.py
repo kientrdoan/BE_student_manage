@@ -63,7 +63,7 @@ class ScheduleView(APIView):
         validated_data = serializer.validated_data
         semester_id = validated_data['semester_id']
         excel_file = validated_data.get('excel_file')
-
+        print("excel_file",excel_file)
         try:
             # Parse hard assignments từ Excel nếu có
             hard_assignments = []
@@ -71,7 +71,7 @@ class ScheduleView(APIView):
                 logger.info("Đang đọc file Excel hard assignments...")
                 hard_assignments = self._parse_excel_hard_assignments(excel_file)
                 logger.info(f"Đã đọc {len(hard_assignments)} phân công cứng từ Excel")
-
+            print("hard_assignments",hard_assignments)
             # Khởi tạo scheduler với tham số tùy chỉnh
             scheduler = GeneticScheduler(semester_id=semester_id)
 
