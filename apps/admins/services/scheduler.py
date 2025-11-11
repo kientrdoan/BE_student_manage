@@ -41,17 +41,15 @@ class Chromosome:
                 hard_assign = hard_map.get(course.id)
 
                 if hard_assign:
-                    # CÓ PHÂN CÔNG CỨNG - dùng giá trị BẮT BUỘC
                     gene = {
                         'course_id': course.id,
-                        'teacher_id': hard_assign.teacher_id,  # BẮT BUỘC
-                        'room_id': hard_assign.room_id,  # BẮT BUỘC
-                        'day_idx': hard_assign.day_idx,  # BẮT BUỘC
-                        'slot': hard_assign.slot,  # BẮT BUỘC
-                        'is_hard': True  # Đánh dấu gen cứng
+                        'teacher_id': hard_assign.teacher_id,  # Cố định
+                        'room_id': random.choice(suitable_rooms).id,  # Random
+                        'day_idx': random.choice(days),
+                        'slot': random.choice(slots),
+                        'is_hard': True
                     }
-                    logger.debug(f"  Gen cứng: Course {course.id} - GV {hard_assign.teacher_id} - "
-                                 f"Phòng {hard_assign.room_id} - Ngày {hard_assign.day_idx} - Tiết {hard_assign.slot}")
+                    logger.debug(f" - GV {hard_assign.teacher_id} - ")
                 else:
                     # KHÔNG CÓ PHÂN CÔNG CỨNG - tạo ngẫu nhiên
                     gene = {
@@ -206,24 +204,6 @@ class GeneticScheduler:
                     violations['hard_violations'] += 1
                     logger.debug(
                         f"Vi phạm GV: Course {course_id} - Expected {hard.teacher_id}, Got {gene['teacher_id']}")
-
-                # Kiểm tra room
-                if gene['room_id'] != hard.room_id:
-                    fitness += self.PENALTY_VIOLATE_HARD
-                    violations['hard_violations'] += 1
-                    logger.debug(f"Vi phạm phòng: Course {course_id} - Expected {hard.room_id}, Got {gene['room_id']}")
-
-                # Kiểm tra day
-                if gene['day_idx'] != hard.day_idx:
-                    fitness += self.PENALTY_VIOLATE_HARD
-                    violations['hard_violations'] += 1
-                    logger.debug(f"Vi phạm ngày: Course {course_id} - Expected {hard.day_idx}, Got {gene['day_idx']}")
-
-                # Kiểm tra slot
-                if gene['slot'] != hard.slot:
-                    fitness += self.PENALTY_VIOLATE_HARD
-                    violations['hard_violations'] += 1
-                    logger.debug(f"Vi phạm tiết: Course {course_id} - Expected {hard.slot}, Got {gene['slot']}")
 
             # ========== KIỂM TRA CÁC RÀNG BUỘC KHÁC ==========
 
@@ -439,8 +419,7 @@ class GeneticScheduler:
 
         if hard_assignments:
             for ha in hard_assignments:
-                logger.info(f"  🔒 Course {ha.course_id}: GV {ha.teacher_id}, "
-                            f"Phòng {ha.room_id}, {self.DAYS[ha.day_idx]}, Tiết {ha.slot}")
+                logger.info(f"  GV {ha.teacher_id}, ")
         else:
             logger.info("  Không có phân công cứng nào")
 

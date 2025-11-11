@@ -119,10 +119,6 @@ class HardAssignmentSerializer(serializers.Serializer):
     """Serializer để validate hard assignment từ Excel"""
     course_id = serializers.IntegerField()
     teacher_id = serializers.IntegerField()
-    room_id = serializers.IntegerField()
-    day_idx = serializers.IntegerField(min_value=0, max_value=5)  # 0-5: Thứ 2-7
-    slot = serializers.IntegerField(min_value=1, max_value=6)  # 1-6: Tiết học
-    reason = serializers.CharField(required=False, allow_blank=True)
 
     def validate_course_id(self, value):
         """Validate course exists"""
@@ -138,12 +134,4 @@ class HardAssignmentSerializer(serializers.Serializer):
             GiaoVien.objects.get(id=value, is_deleted=False)
         except GiaoVien.DoesNotExist:
             raise serializers.ValidationError(f"Giáo viên ID {value} không tồn tại")
-        return value
-
-    def validate_room_id(self, value):
-        """Validate room exists"""
-        try:
-            PhongHoc.objects.get(id=value, is_active=True)
-        except PhongHoc.DoesNotExist:
-            raise serializers.ValidationError(f"Phòng học ID {value} không tồn tại")
         return value

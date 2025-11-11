@@ -24,10 +24,6 @@ class HardAssignment:
     id: int
     course_id: int
     teacher_id: int
-    room_id: int
-    day_idx: int
-    slot: int
-    reason: str = ""
     is_active: bool = True
     is_deleted: bool = False
 
@@ -166,13 +162,10 @@ class ScheduleView(APIView):
         Parse file Excel để lấy danh sách hard assignments
 
         Format Excel:
-        | course_id | teacher_id | room_id | day_idx | slot | reason |
-        |-----------|------------|---------|---------|------|--------|
-        | 1         | 5          | 10      | 0       | 1    | VIP    |
-        | 2         | 3          | 8       | 2       | 3    | Request|
-
-        day_idx: 0=Thứ 2, 1=Thứ 3, ..., 5=Thứ 7
-        slot: 1-6 (tiết học)
+        | course_id | teacher_id |
+        |-----------|------------|
+        | 1         | 5          | 
+        | 2         | 3          |
         """
         hard_assignments = []
 
@@ -194,10 +187,6 @@ class ScheduleView(APIView):
                     assignment_data = {
                         'course_id': int(row[0]) if row[0] else None,
                         'teacher_id': int(row[1]) if row[1] else None,
-                        'room_id': int(row[2]) if row[2] else None,
-                        'day_idx': int(row[3]) if row[3] is not None else None,
-                        'slot': int(row[4]) if row[4] else None,
-                        'reason': str(row[5]) if len(row) > 5 and row[5] else ""
                     }
 
                     # Validate data
@@ -211,10 +200,6 @@ class ScheduleView(APIView):
                         id=idx,
                         course_id=assignment_data['course_id'],
                         teacher_id=assignment_data['teacher_id'],
-                        room_id=assignment_data['room_id'],
-                        day_idx=assignment_data['day_idx'],
-                        slot=assignment_data['slot'],
-                        reason=assignment_data['reason']
                     )
 
                     hard_assignments.append(assignment)
