@@ -112,11 +112,11 @@ class GeneticScheduler:
     PENALTY_TEACHER_CONFLICT = -1000  # Phạt trùng GV
     PENALTY_CLASS_CONFLICT = -1000  # Phạt trùng lớp SV
     PENALTY_ROOM_CAPACITY = -500  # Phạt phòng không đủ chỗ
-    PENALTY_VIOLATE_HARD = -10000  # ← SỬA: Tăng penalty lên -10000 (rất nặng)
+    PENALTY_VIOLATE_HARD = -10000
     BONUS_MORNING = 10  # Thưởng tiết sáng
     BONUS_COMPACT = 5  # Thưởng lịch gọn
 
-    DAYS = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"]
+    DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
     def __init__(self, semester_id: int):
         self.semester_id = semester_id
@@ -171,7 +171,7 @@ class GeneticScheduler:
             'teacher_conflicts': 0,
             'class_conflicts': 0,
             'capacity_issues': 0,
-            'hard_violations': 0  # ← SỬA: Thêm loại vi phạm này
+            'hard_violations': 0
         }
 
         # Điểm cơ bản: Số lớp xếp được
