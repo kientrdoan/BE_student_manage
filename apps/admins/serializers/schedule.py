@@ -9,6 +9,7 @@ class ScheduleInputSerializer(serializers.Serializer):
     """Serializer cho input của scheduling"""
     semester_id = serializers.IntegerField(required=True)
     excel_file = serializers.FileField(required=False, allow_null=True)
+    holiday_file = serializers.FileField(required=False, allow_null=True)
 
     # GA Parameters (optional)
     population_size = serializers.IntegerField(required=False, default=100)
@@ -25,6 +26,18 @@ class ScheduleInputSerializer(serializers.Serializer):
         return value
 
     def validate_excel_file(self, value):
+        """Validate Excel file format"""
+        if value:
+            if not value.name.endswith(('.xlsx', '.xls')):
+                raise serializers.ValidationError("File phải có định dạng .xlsx hoặc .xls")
+
+            # Kiểm tra kích thước file (max 5MB)
+            if value.size > 5 * 1024 * 1024:
+                raise serializers.ValidationError("Kích thước file không được vượt quá 5MB")
+
+        return value
+    
+    def validate_holiday_file(self, value):
         """Validate Excel file format"""
         if value:
             if not value.name.endswith(('.xlsx', '.xls')):

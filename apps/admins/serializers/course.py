@@ -65,7 +65,7 @@ class CourseSerializer(serializers.ModelSerializer):
 class CourseCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
-        fields = ['semester', 'subject', 'class_st', 'max_capacity', 'start_date', 'end_date']
+        fields = ['semester', 'subject', 'class_st', 'max_capacity']
 
 class CourseUpdateSerializer(serializers.ModelSerializer):
     class Meta:

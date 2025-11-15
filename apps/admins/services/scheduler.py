@@ -2,10 +2,16 @@ import random
 import copy
 from typing import List, Tuple, Dict
 from django.db.models import Count, Q
+from apps.my_built_in.models.hoc_ky import HocKy
 import logging
 
 logger = logging.getLogger(__name__)
 
+from datetime import date, timedelta
+
+# HOLIDAYS = {
+#     date(2025, 9, 2)  # ← SỬA: Dùng date thay vì datetime
+# }
 
 class Chromosome:
     """
@@ -24,8 +30,8 @@ class Chromosome:
 
     def initialize_random(self):
         """Khởi tạo gen ngẫu nhiên, tuân theo phân công cứng"""
-        days = list(range(6))  # 0=Thứ2, 1=Thứ3,..., 5=Thứ7
-        slots = [1, 2, 3, 4, 5, 6]  # ← SỬA: Thêm đầy đủ các tiết
+        days = list(range(2))  # 0=Thứ2, 1=Thứ3,..., 5=Thứ7
+        slots = [1, 6]  # ← SỬA: Thêm đầy đủ các tiết
 
         # Tạo map phân công cứng theo course_id
         hard_map = {ha.course_id: ha for ha in self.hard_assignments}
@@ -114,9 +120,10 @@ class GeneticScheduler:
     BONUS_MORNING = 10  # Thưởng tiết sáng
     BONUS_COMPACT = 5  # Thưởng lịch gọn
 
-    DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+    DAYS = ['Monday', 'Tuesday']
 
-    def __init__(self, semester_id: int):
+    def __init__(self, semester_id: int, HOLIDAYS= []):
+        self.HOLIDAYS = HOLIDAYS
         self.semester_id = semester_id
         self.population = []
         self.best_chromosome = None
@@ -179,9 +186,9 @@ class GeneticScheduler:
         hard_map = {ha.course_id: ha for ha in chromosome.hard_assignments}
 
         # Kiểm tra ràng buộc
-        schedule_map = {}  # (room_id, day, slot): course_id
-        teacher_map = {}  # (teacher_id, day, slot): course_id
-        class_map = {}  # (class_id, day, slot): course_id
+        schedule_map = {} 
+        teacher_map = {}
+        class_map = {}
 
         for gene in chromosome.genes:
             course = next((c for c in chromosome.courses if c.id == gene['course_id']), None)
@@ -362,8 +369,8 @@ class GeneticScheduler:
                 elif mutation_type == 2:  # Đổi ngày
                     gene['day_idx'] = random.randint(0, 5)
 
-                elif mutation_type == 3:  # Đổi tiết
-                    gene['slot'] = random.choice([1, 2, 3, 4, 5, 6])
+                elif mutation_type == 3:  # Đổi ca
+                    gene['slot'] = random.choice([1, 6])
 
     def create_new_generation(self):
         """
@@ -479,6 +486,67 @@ class GeneticScheduler:
             'generations': generation
         }
 
+    def calculate_weeks(self, course):
+        """
+        Tính số buổi học cần thiết cho môn học dựa vào tổng số tiết.
+        Ví dụ: 45 tiết = 11-12 buổi.
+        Mặc định: 1 buổi = 4 tiết.
+        """
+        periods_per_session = 4  
+
+        total_periods = course.subject.total_period
+
+        weeks = total_periods / periods_per_session
+        return int(weeks) if weeks.is_integer() else int(weeks)
+
+    def get_start_end_date_semester(self):
+        try:
+            hoc_ky = HocKy.objects.get(id = self.semester_id)
+            return [hoc_ky.start_date, hoc_ky.end_date]
+        except HocKy.DoesNotExist as e:
+            return []
+        return []
+
+    # ######
+    def get_first_date_of_weekday(self, semester_start, target_day_idx):
+        """
+        target_day_idx: 0=Monday ... 5=Saturday
+        semester_start có thể không phải thứ 2
+        """
+        start_weekday = semester_start.weekday()  # Monday = 0
+
+        delta = (target_day_idx - start_weekday) % 7
+
+        return semester_start + timedelta(days=delta)
+    
+    def generate_course_schedule_dates(self, course, day_idx):
+        """
+        Trả về danh sách ngày học (mỗi tuần 1 buổi), tuỳ số tuần theo môn.
+        """
+        start_date_semester = self.get_start_end_date_semester()[0]
+        first_date = self.get_first_date_of_weekday(start_date_semester, day_idx)
+
+        weeks = self.calculate_weeks(course)
+
+        return [first_date + timedelta(weeks=w) for w in range(weeks)]
+
+    
+    def adjust_for_holidays(self, date_list):
+        """Điều chỉnh lịch để bỏ qua ngày lễ
+        Nếu 1 ngày trùng lễ, tất cả các ngày sau dời thêm 1 tuần"""
+        adjusted = []
+        shift_weeks = 0
+
+        for d in date_list:
+            new_d = d + timedelta(weeks=shift_weeks)
+            if new_d in self.HOLIDAYS:
+                # Nếu trùng lễ, tăng shift_weeks, dời ngày hiện tại và tất cả các ngày sau
+                shift_weeks += 1
+                new_d = d + timedelta(weeks=shift_weeks)
+            adjusted.append(new_d)
+
+        return adjusted
+    
     def apply_schedule(self, chromosome: Chromosome) -> List:
         """
         Áp dụng lịch học từ chromosome vào database
@@ -490,11 +558,21 @@ class GeneticScheduler:
         for gene in chromosome.genes:
             try:
                 course = LopTinChi.objects.get(id=gene['course_id'])
+
                 course.teacher_id = gene['teacher_id']
                 course.room_id = gene['room_id']
                 course.weekday = self.DAYS[gene['day_idx']]
                 course.start_period = gene['slot']
+
+                raw_dates = self.generate_course_schedule_dates(course, gene['day_idx'])
+                final_dates = self.adjust_for_holidays(raw_dates)
+                
+                course.start_date = final_dates[0]
+                course.end_date = final_dates[len(final_dates)-1]
+                # print("finaldate", final_dates)
                 scheduled_courses.append(course)
+
+
             except Exception as e:
                 logger.error(f"Lỗi khi áp dụng gen {gene}: {str(e)}")
 
@@ -503,12 +581,18 @@ class GeneticScheduler:
     def save_to_database(self, chromosome: Chromosome):
         """Lưu lịch học vào database"""
         from django.db import transaction
+        from apps.my_built_in.models.buoi_hoc import BuoiHoc
 
         try:
             with transaction.atomic():
                 scheduled_courses = self.apply_schedule(chromosome)
                 for course in scheduled_courses:
                     course.save()
+                    raw_dates = self.generate_course_schedule_dates(course, self.DAYS.index(course.weekday))
+                    final_dates = self.adjust_for_holidays(raw_dates)
+                    for date in final_dates:
+                        BuoiHoc.objects.create(course= course, date = date)
+                    
 
             logger.info(f"✅ Đã lưu {len(scheduled_courses)} lớp vào database")
             return True

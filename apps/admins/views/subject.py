@@ -1,4 +1,5 @@
 from rest_framework.views import APIView
+from django.db.models import Q
 
 from apps.my_built_in.models.mon_hoc import MonHoc as Subject
 
@@ -19,10 +20,17 @@ class SubjectView(APIView):
         return ResponseFormat.response(data=serializer.data)
     
     def post(self, request):
-        serializer = SubjectCreateSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return ResponseFormat.response(data=serializer.data)
+        try:
+            Subject.objects.get(
+                Q(code = request.data.get("code")) | 
+                Q(name = request.data.get("name")),
+            )
+            return ResponseFormat.response(data=None, case_name="ALREADY_EXISTS", status=400)
+        except Subject.DoesNotExist:
+            serializer = SubjectCreateSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return ResponseFormat.response(data=serializer.data)
         return ResponseFormat.response(data=serializer.error_messages, case_name="ERROR", status=400)
     
 class SubjectDetailView(APIView):
@@ -48,7 +56,7 @@ class SubjectDetailView(APIView):
     def delete(self, request, pk):
         try:
             subject = Subject.objects.get(pk=pk)
-            subject.is_deleted= True
+            subject.is_deleted= not subject.is_deleted
             subject.save()
             return ResponseFormat.response(data=None)
         except Subject.DoesNotExist:

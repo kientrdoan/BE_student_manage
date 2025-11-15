@@ -52,7 +52,7 @@ urlpatterns += [
 urlpatterns += [
     path('courses/', CourseCreateView.as_view(), name='course-list'),
     path('courses/<int:semester_id>', CourseView.as_view(), name='course-list'),
-    path('courses/<int:pk>', CourseDetailView.as_view(), name='course-detail'),
+    path('course/<int:pk>', CourseDetailView.as_view(), name='course-detail'),
 ]
 
 # Subject

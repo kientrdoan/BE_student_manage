@@ -10,6 +10,12 @@ class MajorDetailSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'department', 'created_at', 'updated_at', 'is_deleted']
         read_only_fields = ['id', 'created_at', 'updated_at']
 
+class MajorCreateSerializer(serializers.ModelSerializer):
+    department = serializers.SerializerMethodField
+    class Meta:
+        model = Nganh
+        fields = ['id', 'name', 'department']
+
 class MajorListSerializer(serializers.ModelSerializer):
     department = serializers.SerializerMethodField()
     class Meta:

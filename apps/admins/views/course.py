@@ -23,10 +23,21 @@ class CourseView(APIView):
     
 class CourseCreateView(APIView):
     def post(self, request):
-        serializer = CourseCreateSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
+        course = Course.objects.filter(
+            semester__id = request.data.get("semester"),
+            subject__id = request.data.get("subject"),
+            class_st__id = request.data.get("class_st") 
+        ).first()
+
+        if course:
+            course.is_deleted = False
+            course.save()
             return ResponseFormat.response(data=serializer.data, case_name="SUCCESS")
+        else:
+            serializer = CourseCreateSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return ResponseFormat.response(data=serializer.data, case_name="SUCCESS")
         return ResponseFormat.response(data=serializer.errors, case_name="ERROR", status=400)
     
 class CourseDetailView(APIView):
@@ -57,6 +68,6 @@ class CourseDetailView(APIView):
         course = self.get_object(pk)
         if course is None:
             return ResponseFormat.response(case_name="NOT_FOUND", status=404)
-        course.is_deleted = True
+        course.is_deleted = not course.is_deleted
         course.save()
         return ResponseFormat.response(case_name="SUCCESS")

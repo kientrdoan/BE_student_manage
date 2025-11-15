@@ -3,6 +3,7 @@ from rest_framework.parsers import MultiPartParser, FormParser
 import openpyxl
 from dataclasses import dataclass
 import logging
+from datetime import date, datetime, timedelta
 
 from apps.my_built_in.response import ResponseFormat
 from apps.admins.serializers.schedule import (
@@ -59,19 +60,19 @@ class ScheduleView(APIView):
         validated_data = serializer.validated_data
         semester_id = validated_data['semester_id']
         excel_file = validated_data.get('excel_file')
-        print(validated_data)
+        holiday_file = validated_data.get('holiday_file')
 
-        print("excel_file",excel_file)
         try:
             # Parse hard assignments từ Excel nếu có
             hard_assignments = []
             if excel_file:
                 logger.info("Đang đọc file Excel hard assignments...")
                 hard_assignments = self._parse_excel_hard_assignments(excel_file)
+                holidays = self._parse_excel_holidays(holiday_file)
                 logger.info(f"Đã đọc {len(hard_assignments)} phân công cứng từ Excel")
-            print("hard_assignments",hard_assignments)
+            # print("hard_assignments",hard_assignments)
             # Khởi tạo scheduler với tham số tùy chỉnh
-            scheduler = GeneticScheduler(semester_id=semester_id)
+            scheduler = GeneticScheduler(semester_id=semester_id, HOLIDAYS=holidays)
 
             # Override parameters nếu có
             if 'population_size' in validated_data:
@@ -209,11 +210,69 @@ class ScheduleView(APIView):
                     logger.warning(f"Lỗi parse dòng {idx}: {str(e)}")
                     continue
 
+        
+
         except Exception as e:
             logger.error(f"Lỗi khi đọc file Excel: {str(e)}")
             raise ValueError(f"Không thể đọc file Excel: {str(e)}")
 
         return hard_assignments
+
+
+    def _parse_excel_holidays(self, excel_file):
+        holidays = set()
+        try:
+            wb = openpyxl.load_workbook(excel_file, data_only=True)
+            sheet = wb.active
+
+            # ƯU TIÊN CHUẨN VIỆT NAM: NGÀY/THÁNG/NĂM
+            date_formats = [
+                "%d/%m/%Y",   # 02/09/2025 → 2 tháng 9
+                "%d.%m.%Y",
+                "%d-%m-%Y",
+                "%Y-%m-%d",   # 2025-09-02
+            ]
+
+            for idx, row in enumerate(sheet.iter_rows(min_row=2, values_only=True), start=2):
+                raw_value = row[0]
+                if raw_value is None or raw_value == "":
+                    continue
+
+                # BƯỚC QUAN TRỌNG: LUÔN ÉP VỀ CHUỖI, KHÔNG TIN openpyxl
+                s = str(raw_value).strip()
+
+                # Nếu là số (serial date), chuyển về chuỗi dd/mm/yyyy
+                if isinstance(raw_value, (int, float)):
+                    try:
+                        excel_date = datetime(1899, 12, 30) + timedelta(days=int(raw_value))
+                        s = excel_date.strftime("%d/%m/%Y")
+                    except:
+                        s = str(raw_value)
+
+                parsed_date = None
+                for fmt in date_formats:
+                    try:
+                        parsed_date = datetime.strptime(s, fmt).date()
+                        # Kiểm tra tính hợp lý: nếu ngày > 12 → phải là %d/%m/%Y
+                        if fmt == "%d/%m/%Y" and 1 <= parsed_date.day <= 31 and 1 <= parsed_date.month <= 12:
+                            break
+                        if parsed_date.month > 12:
+                            continue
+                        break
+                    except ValueError:
+                        continue
+
+                if parsed_date:
+                    holidays.add(parsed_date)
+                    # print(f"Parsed: {s} → {parsed_date}")  # Debug
+                else:
+                    logger.warning(f"[Holiday] Không parse được dòng {idx}: '{s}'")
+
+        except Exception as e:
+            raise ValueError(f"Lỗi file Excel: {e}")
+
+        return holidays
+    
 
     def _calculate_statistics(self, chromosome):
         """Tính toán thống kê từ chromosome"""
@@ -337,8 +396,13 @@ class ScheduleResetView(APIView):
         """
         Reset lịch học của học kỳ (xóa teacher, room, weekday, start_period)
         """
+        from apps.my_built_in.models.buoi_hoc import BuoiHoc
         try:
             with transaction.atomic():
+                BuoiHoc.objects.filter(
+                course__semester_id=semester_id
+                ).delete()[0]
+
                 updated = LopTinChi.objects.filter(
                     semester_id=semester_id,
                     is_deleted=False
@@ -346,7 +410,9 @@ class ScheduleResetView(APIView):
                     teacher_id=None,
                     room_id=None,
                     weekday=None,
-                    start_period=None
+                    start_period=None,
+                    start_date= None,
+                    end_date = None
                 )
 
             logger.info(f"Đã reset {updated} lớp học của học kỳ {semester_id}")
