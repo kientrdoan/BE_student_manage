@@ -30,6 +30,7 @@ class StudentDetailSerializer(serializers.ModelSerializer):
         return None
     
     def get_class_student(self, obj):
+        print("obj", obj)
         class_student = obj.class_student
         if class_student:
             return {

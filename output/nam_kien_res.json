@@ -1,0 +1,174 @@
+{
+    "input_path": "E:\\AI\\BE_student_manage\\test\\vietnamese-ocr\\vietocr\\nam_kien.jpg",
+    "page_index": null,
+    "model_settings": {
+        "use_doc_preprocessor": true,
+        "use_textline_orientation": false
+    },
+    "doc_preprocessor_res": {
+        "input_path": null,
+        "page_index": null,
+        "model_settings": {
+            "use_doc_orientation_classify": false,
+            "use_doc_unwarping": false
+        },
+        "angle": -1
+    },
+    "dt_polys": [
+        [
+            [
+                658,
+                43
+            ],
+            [
+                834,
+                19
+            ],
+            [
+                840,
+                65
+            ],
+            [
+                664,
+                89
+            ]
+        ],
+        [
+            [
+                662,
+                87
+            ],
+            [
+                831,
+                66
+            ],
+            [
+                834,
+                94
+            ],
+            [
+                665,
+                115
+            ]
+        ],
+        [
+            [
+                696,
+                119
+            ],
+            [
+                787,
+                107
+            ],
+            [
+                793,
+                156
+            ],
+            [
+                702,
+                168
+            ]
+        ]
+    ],
+    "text_det_params": {
+        "limit_side_len": 736,
+        "limit_type": "min",
+        "thresh": 0.3,
+        "max_side_limit": 4000,
+        "box_thresh": 0.6,
+        "unclip_ratio": 1.5
+    },
+    "text_type": "general",
+    "textline_orientation_angles": [
+        -1,
+        -1,
+        -1
+    ],
+    "text_rec_score_thresh": 0.0,
+    "rec_texts": [
+        "PTN-TH IENTU' SO",
+        "Digial Electronics lab",
+        "2D05"
+    ],
+    "rec_scores": [
+        0.8120976686477661,
+        0.8839418888092041,
+        0.989612340927124
+    ],
+    "rec_polys": [
+        [
+            [
+                658,
+                43
+            ],
+            [
+                834,
+                19
+            ],
+            [
+                840,
+                65
+            ],
+            [
+                664,
+                89
+            ]
+        ],
+        [
+            [
+                662,
+                87
+            ],
+            [
+                831,
+                66
+            ],
+            [
+                834,
+                94
+            ],
+            [
+                665,
+                115
+            ]
+        ],
+        [
+            [
+                696,
+                119
+            ],
+            [
+                787,
+                107
+            ],
+            [
+                793,
+                156
+            ],
+            [
+                702,
+                168
+            ]
+        ]
+    ],
+    "rec_boxes": [
+        [
+            658,
+            19,
+            840,
+            89
+        ],
+        [
+            662,
+            66,
+            834,
+            115
+        ],
+        [
+            696,
+            107,
+            793,
+            168
+        ]
+    ]
+}

@@ -379,3 +379,7 @@ class ScheduleResetView(APIView):
                 case_name="ERROR",
                 status=500
             )
+
+if __name__ == "__main__":
+    text ="Good evening, Nam"
+    print(f"trong cau nay co so chu 'e' la: {text.count('e')} va co {text.count('o')} chu o")
