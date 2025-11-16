@@ -2,6 +2,7 @@ from rest_framework.views import APIView
 
 # model
 from apps.my_built_in.models.giao_vien import GiaoVien as Teacher
+from apps.my_built_in.models.tai_khoan import TaiKhoan as User
 # serializer
 from apps.admins.serializers.teacher import TeacherDetailSerializer, TeacherCreateSerializer, TeacherUpdateSerializer
 
@@ -18,6 +19,12 @@ class TeacherView(APIView):
         return ResponseFormat.response(data=serializer.data, case_name="SUCCESS")
 
     def post(self, request):
+        teacher_code = Teacher.objects.filter(teacher_code = request.data.get("teacher_code")).first()
+        if teacher_code:
+            return ResponseFormat.response(data=None, case_name="TEACHER_CODE_EXIST", status=400)
+        student_email = User.objects.filter(email=request.data.get("user.email")).first()
+        if student_email:
+            return ResponseFormat.response(data=None, case_name="EMAIL_EXISTS", status=400)
         serializer = TeacherCreateSerializer(data=request.data)
         print(request.data)
         if serializer.is_valid():
@@ -51,9 +58,14 @@ class TeacherDetailView(APIView):
     def delete(self, request, pk):
         try:
             teacher = Teacher.objects.get(pk=pk)
+            user = User.objects.get(pk= teacher.user.id)
         except Teacher.DoesNotExist:
             return ResponseFormat.response(data=None, case_name="NOT_FOUND")
+        except User.DoesNotExist:
+            return ResponseFormat.response(data=None, case_name="NOT_FOUND")
         
-        teacher.is_deleted = True
+        teacher.is_deleted = not teacher.is_deleted
+        user.is_active = not user.is_active
         teacher.save()
+        user.save()
         return ResponseFormat.response(data=None)
