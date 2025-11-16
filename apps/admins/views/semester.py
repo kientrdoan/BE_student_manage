@@ -9,15 +9,26 @@ from apps.my_built_in.response import ResponseFormat
 
 class SemesterView(APIView):
     def get(self, request):
-        semesters = Semester.objects.filter(is_deleted = False)
+        is_deleted = request.GET.get("is_deleted")
+        if is_deleted is not None:
+            semesters = Semester.objects.filter(is_deleted = is_deleted)
+        else:
+            semesters = Semester.objects.all()
         serializer = SemesterSerializer(semesters, many=True)
         return ResponseFormat.response(data=serializer.data)
     
     def post(self, request):
-        serializer = SemesterCreateSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return ResponseFormat.response(data=serializer.data, case_name="SUCCESS")
+        try:
+            Semester.objects.get(
+                semesters = request.data.get("semesters"),
+                year = request.data.get("year")
+            )
+            return ResponseFormat.response(data=None, case_name="ALREADY_EXISTS", status=400)
+        except Semester.DoesNotExist:
+            serializer = SemesterCreateSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return ResponseFormat.response(data=serializer.data, case_name="SUCCESS")
         return ResponseFormat.response(data=serializer.errors, case_name="ERROR", status=400)
     
 class SemesterDetailView(APIView):
@@ -48,7 +59,7 @@ class SemesterDetailView(APIView):
         semester = self.get_object(pk)
         if semester is None:
             return ResponseFormat.response(case_name="NOT_FOUND", status=404)
-        semester.is_deleted = True
+        semester.is_deleted = not semester.is_deleted
         semester.save()
         return ResponseFormat.response(case_name="SUCCESS")
     

@@ -4,21 +4,29 @@ from rest_framework.views import APIView
 from apps.my_built_in.models.nganh import Nganh as Major
 
 # serializers
-from apps.admins.serializers.major import MajorDetailSerializer
+from apps.admins.serializers.major import MajorDetailSerializer, MajorListSerializer, MajorCreateSerializer
 
 from apps.my_built_in.response import ResponseFormat
 
 class MajorView(APIView):
     def get(self, request):
-        majors = Major.objects.filter(is_deleted = False)
-        serializer = MajorDetailSerializer(majors, many=True)
+        is_deleted = request.GET.get("is_deleted", None)
+        if is_deleted is not None:
+            majors = Major.objects.filter(is_deleted = is_deleted)
+        else:
+            majors = Major.objects.all()
+        serializer = MajorListSerializer(majors, many=True)
         return ResponseFormat.response(data=serializer.data)
 
     def post(self, request):
-        serializer = MajorDetailSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return ResponseFormat.response(data=serializer.data)
+        try:
+            Major.objects.get(name = request.data.get("name"))
+            return ResponseFormat.response(data=None, case_name="ALREADY_EXISTS", status=400)
+        except Major.DoesNotExist:
+            serializer = MajorCreateSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return ResponseFormat.response(data=serializer.data)
         return ResponseFormat.response(data=serializer.errors, case_name="INVALID_INPUT", status=400)
     
 class MajorDetailView(APIView):
@@ -37,7 +45,7 @@ class MajorDetailView(APIView):
         except Major.DoesNotExist:
             return ResponseFormat.response(data=None, case_name="NOT_FOUND", status=404)
         
-        serializer = MajorDetailSerializer(major, data=request.data)
+        serializer = MajorCreateSerializer(major, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return ResponseFormat.response(data=serializer.data)
@@ -49,6 +57,6 @@ class MajorDetailView(APIView):
         except Major.DoesNotExist:
             return ResponseFormat.response(data=None, case_name="NOT_FOUND", status=404)
         
-        major.is_deleted= True
+        major.is_deleted= not major.is_deleted
         major.save()
         return ResponseFormat.response(data=None, case_name="SUCCESS")

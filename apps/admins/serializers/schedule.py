@@ -9,6 +9,7 @@ class ScheduleInputSerializer(serializers.Serializer):
     """Serializer cho input của scheduling"""
     semester_id = serializers.IntegerField(required=True)
     excel_file = serializers.FileField(required=False, allow_null=True)
+    holiday_file = serializers.FileField(required=False, allow_null=True)
 
     # GA Parameters (optional)
     population_size = serializers.IntegerField(required=False, default=100)
@@ -25,6 +26,18 @@ class ScheduleInputSerializer(serializers.Serializer):
         return value
 
     def validate_excel_file(self, value):
+        """Validate Excel file format"""
+        if value:
+            if not value.name.endswith(('.xlsx', '.xls')):
+                raise serializers.ValidationError("File phải có định dạng .xlsx hoặc .xls")
+
+            # Kiểm tra kích thước file (max 5MB)
+            if value.size > 5 * 1024 * 1024:
+                raise serializers.ValidationError("Kích thước file không được vượt quá 5MB")
+
+        return value
+    
+    def validate_holiday_file(self, value):
         """Validate Excel file format"""
         if value:
             if not value.name.endswith(('.xlsx', '.xls')):
@@ -119,10 +132,6 @@ class HardAssignmentSerializer(serializers.Serializer):
     """Serializer để validate hard assignment từ Excel"""
     course_id = serializers.IntegerField()
     teacher_id = serializers.IntegerField()
-    room_id = serializers.IntegerField()
-    day_idx = serializers.IntegerField(min_value=0, max_value=5)  # 0-5: Thứ 2-7
-    slot = serializers.IntegerField(min_value=1, max_value=6)  # 1-6: Tiết học
-    reason = serializers.CharField(required=False, allow_blank=True)
 
     def validate_course_id(self, value):
         """Validate course exists"""
@@ -138,12 +147,4 @@ class HardAssignmentSerializer(serializers.Serializer):
             GiaoVien.objects.get(id=value, is_deleted=False)
         except GiaoVien.DoesNotExist:
             raise serializers.ValidationError(f"Giáo viên ID {value} không tồn tại")
-        return value
-
-    def validate_room_id(self, value):
-        """Validate room exists"""
-        try:
-            PhongHoc.objects.get(id=value, is_active=True)
-        except PhongHoc.DoesNotExist:
-            raise serializers.ValidationError(f"Phòng học ID {value} không tồn tại")
         return value

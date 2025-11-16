@@ -4,21 +4,30 @@ from rest_framework.views import APIView
 from apps.my_built_in.models.khoa import Khoa as Department
 
 # serializers
-from apps.admins.serializers.department import DepartmentDetailSerializer
+from apps.admins.serializers.department import DepartmentDetailSerializer, DepartmentCreateSerializer
+from django.db.models import Q
 
 from apps.my_built_in.response import ResponseFormat
 
 class DepartmentView(APIView):
     def get(self, request):
-        departments = Department.objects.filter(is_deleted = False)
+        is_deleted = request.GET.get("is_deleted", None)
+        if is_deleted is not None:
+            departments = Department.objects.filter(is_deleted = is_deleted)
+        else:
+            departments = Department.objects.all()
         serializer = DepartmentDetailSerializer(departments, many=True)
         return ResponseFormat.response(data=serializer.data, case_name="SUCCESS")
 
     def post(self, request):
-        serializer = DepartmentDetailSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return ResponseFormat.response(data=serializer.data, case_name="SUCCESS")
+        try:
+            Department.objects.get(Q(name=request.data.get("name")) | Q(code=request.data.get("code")))
+            return ResponseFormat.response(data=None, case_name="ALREADY_EXISTS", status=400)
+        except Department.DoesNotExist:
+            serializer = DepartmentCreateSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return ResponseFormat.response(data=serializer.data, case_name="SUCCESS")
         return ResponseFormat.response(data=serializer.errors, case_name="INVALID_INPUT", status=400)
 
     
@@ -50,6 +59,6 @@ class DepartmentDetailView(APIView):
         except Department.DoesNotExist:
             return ResponseFormat.response(data=None, case_name="NOT_FOUND", status=404)
         
-        department.is_deleted= True
+        department.is_deleted= not department.is_deleted
         department.save()
         return ResponseFormat.response(data=None, case_name="SUCCESS")

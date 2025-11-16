@@ -1,5 +1,21 @@
-from rest_framework.serializers import ModelSerializer
+from rest_framework.serializers import ModelSerializer, SerializerMethodField
 from apps.my_built_in.models.lop_sinh_vien import LopSinhVien
+
+class ClassListSerializer(ModelSerializer):
+    major = SerializerMethodField()
+    class Meta:
+        model = LopSinhVien
+        fields = ['id', 'name', 'major', 'start_year', 'end_year', 'created_at', 'updated_at', 'is_deleted']
+        read_only_fields = ['id', 'created_at', 'updated_at']
+    
+    def get_major(self, obj):
+        major = obj.major
+        if major:
+            return {
+                "major_id": major.id,
+                "major_name": major.name
+            }
+        return None
 
 
 class ClassDetailSerializer(ModelSerializer):

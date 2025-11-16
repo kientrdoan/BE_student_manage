@@ -1,8 +1,9 @@
 from rest_framework.views import APIView
+from django.db.models import Q
 
 from apps.my_built_in.models.mon_hoc import MonHoc as Subject
 
-from apps.admins.serializers.subject import SubjectSerializer, SubjectCreateSerializer, SubjectUpdateSerializer
+from apps.admins.serializers.subject import SubjectSerializer, SubjectListSerializer, SubjectCreateSerializer, SubjectUpdateSerializer
 
 
 from apps.my_built_in.response import ResponseFormat
@@ -10,15 +11,26 @@ from apps.my_built_in.response import ResponseFormat
 
 class SubjectView(APIView):
     def get(self, request):
-        subjects = Subject.objects.filter(is_deleted = False)
-        serializer = SubjectSerializer(subjects, many=True)
+        is_deleted = request.GET.get("is_deleted", None)
+        if is_deleted is not None:
+            subjects = Subject.objects.filter(is_deleted = is_deleted)
+        else:
+            subjects = Subject.objects.all()
+        serializer = SubjectListSerializer(subjects, many=True)
         return ResponseFormat.response(data=serializer.data)
     
     def post(self, request):
-        serializer = SubjectCreateSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return ResponseFormat.response(data=serializer.data)
+        try:
+            Subject.objects.get(
+                Q(code = request.data.get("code")) | 
+                Q(name = request.data.get("name")),
+            )
+            return ResponseFormat.response(data=None, case_name="ALREADY_EXISTS", status=400)
+        except Subject.DoesNotExist:
+            serializer = SubjectCreateSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return ResponseFormat.response(data=serializer.data)
         return ResponseFormat.response(data=serializer.error_messages, case_name="ERROR", status=400)
     
 class SubjectDetailView(APIView):
@@ -44,7 +56,7 @@ class SubjectDetailView(APIView):
     def delete(self, request, pk):
         try:
             subject = Subject.objects.get(pk=pk)
-            subject.is_deleted= True
+            subject.is_deleted= not subject.is_deleted
             subject.save()
             return ResponseFormat.response(data=None)
         except Subject.DoesNotExist:

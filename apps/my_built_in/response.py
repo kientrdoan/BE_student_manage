@@ -7,6 +7,7 @@ RESPONSE_CODE = {
     "NOT_FOUND": {"code": 404, "msg": "DATA NOT FOUND"},
     "INVALID_INPUT": {"code": 405, "msg": "Dữ liệu không hợp lệ"},
     "ERROR": {"code": 400, "msg": "Có lỗi xảy ra trong quá trình xử lý"},
+    "ALREADY_EXISTS": {"code": 400, "msg": "Dữ liệu đã tồn tại"},
 }
 
 class ResponseFormat:
