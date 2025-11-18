@@ -79,7 +79,7 @@ from apps.admins.views.attendance import (
     AttendanceStatisticsView
 )
 
-urlpatterns = [
+urlpatterns += [
     # Điểm danh bằng khuôn mặt và lấy danh sách điểm danh
     path('attendance/', AttendanceView.as_view(), name='attendance'),
 
