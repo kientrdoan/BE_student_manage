@@ -50,6 +50,7 @@ class CourseSerializer(serializers.ModelSerializer):
             return {
                 "id": class_st.id,
                 "name": class_st.name,
+                "major_id": class_st.major.id,
             }
         return None
     

@@ -1,0 +1,16 @@
+from rest_framework.views import APIView
+
+
+from apps.my_built_in.models.buoi_hoc import BuoiHoc
+
+from apps.teachers.serializers.lesson import LessonListSerializer
+
+from apps.my_built_in.response import ResponseFormat
+
+
+class LessonListView(APIView):
+    def get(self, request, course_id):
+        lessons = BuoiHoc.objects.filter(course__id = course_id)
+        serializer = LessonListSerializer(lessons, many = True)
+
+        return ResponseFormat.response(serializer.data, case_name="SUCCESS")

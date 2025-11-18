@@ -18,5 +18,12 @@ class AttendSerializer(serializers.ModelSerializer):
             return attend.values("id", "status", "time_slot__date")
         except ThamDu.DoesNotExist:
             return None
+        
+class AttendCreateSerializer(serializers.ModelSerializer):
+    attends = serializers.SerializerMethodField()
+    class Meta:
+        model = ThamDu
+        fields = ['enroll_id', 'time_slot_id', 'status']
+
            
 
