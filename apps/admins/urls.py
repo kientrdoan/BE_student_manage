@@ -72,3 +72,20 @@ urlpatterns += [
     path('schedule/status/<int:semester_id>/', ScheduleStatusView.as_view()),
     path('schedule/reset/<int:semester_id>/', ScheduleResetView.as_view()),
 ]
+
+from apps.admins.views.attendance import (
+    AttendanceView,
+    AttendanceDetailView,
+    AttendanceStatisticsView
+)
+
+urlpatterns = [
+    # Điểm danh bằng khuôn mặt và lấy danh sách điểm danh
+    path('attendance/', AttendanceView.as_view(), name='attendance'),
+
+    # Chi tiết và cập nhật điểm danh
+    path('attendance/<int:pk>/', AttendanceDetailView.as_view(), name='attendance-detail'),
+
+    # Thống kê điểm danh
+    path('attendance/statistics/', AttendanceStatisticsView.as_view(), name='attendance-statistics'),
+]

@@ -27,7 +27,7 @@ class FaceRecognition:
 
     def __init__(
             self,
-            weight_path="core/weights/0.9988571428571429.pt",
+            weight_path=WEIGHT_PATH,
             device=None,
             batch_size=32,
             threshold=0.85,

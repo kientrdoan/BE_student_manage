@@ -192,6 +192,203 @@ class FaceEmbeddingService:
                 'message': f'Error extracting face embedding: {str(e)}'
             }
 
+    @classmethod
+    def extract_multiple_faces(cls, image_file=None, image_path=None):
+        """
+        Trích xuất tất cả khuôn mặt từ ảnh có nhiều người.
+
+        Args:
+            image_file: Django UploadedFile (nếu upload từ form)
+            image_path (str): Đường dẫn file ảnh (nếu đã lưu)
+
+        Returns:
+            dict: {
+                'success': bool,
+                'faces': list of dict [
+                    {
+                        'vector': list,
+                        'vector_str': str,
+                        'box': list,
+                        'score': float
+                    }
+                ],
+                'face_count': int,
+                'message': str
+            }
+        """
+        try:
+            # Đọc ảnh
+            if image_file:
+                img = cls.read_image_file(image_file)
+            elif image_path:
+                img = cls.read_image_from_path(image_path)
+            else:
+                return {
+                    'success': False,
+                    'faces': [],
+                    'face_count': 0,
+                    'message': 'No image provided'
+                }
+
+            # Khởi tạo detector và recognizer
+            detector = cls.get_detector()
+            recognizer = cls.get_recognizer()
+
+            # Cập nhật kích thước ảnh cho detector
+            detector.im_height = img.shape[0]
+            detector.im_width = img.shape[1]
+            detector.prior_data = detector._create_prior_box()
+
+            # Detect faces
+            faces, boxes, scores, landmarks = detector.detect_single(
+                img,
+                return_aligned=True
+            )
+
+            # Kiểm tra số lượng khuôn mặt
+            if len(faces) == 0:
+                return {
+                    'success': False,
+                    'faces': [],
+                    'face_count': 0,
+                    'message': 'No face detected in image'
+                }
+
+            # Trích xuất features từ tất cả khuôn mặt
+            features = recognizer.extract_features(faces)
+
+            # Tạo danh sách kết quả
+            face_results = []
+            for i, feature in enumerate(features):
+                vector = feature.cpu().numpy().tolist()
+                vector_str = json.dumps(vector)
+
+                face_results.append({
+                    'vector': vector,
+                    'vector_str': vector_str,
+                    'box': boxes[i].tolist(),
+                    'score': float(scores[i])
+                })
+
+            return {
+                'success': True,
+                'faces': face_results,
+                'face_count': len(faces),
+                'message': f'Successfully extracted {len(faces)} faces'
+            }
+
+        except Exception as e:
+            return {
+                'success': False,
+                'faces': [],
+                'face_count': 0,
+                'message': f'Error extracting faces: {str(e)}'
+            }
+
+    @classmethod
+    def match_faces_batch(cls, detected_vectors, stored_vectors_dict, threshold=0.8):
+        """
+        So sánh nhiều vector phát hiện với danh sách vector đã lưu.
+
+        Args:
+            detected_vectors (list): List các vector phát hiện được (dạng list)
+            stored_vectors_dict (dict): Dict {student_id: vector_str}
+            threshold (float): Ngưỡng khoảng cách
+
+        Returns:
+            dict: {
+                'matches': list of dict [
+                    {
+                        'detected_index': int,
+                        'student_id': int,
+                        'distance': float,
+                        'similarity': float
+                    }
+                ],
+                'unmatched_indices': list of int
+            }
+        """
+        try:
+            if not detected_vectors or not stored_vectors_dict:
+                return {
+                    'matches': [],
+                    'unmatched_indices': list(range(len(detected_vectors)))
+                }
+
+            # Convert detected vectors sang tensor
+            detected_tensors = torch.tensor(
+                detected_vectors,
+                dtype=torch.float32
+            )  # Shape: (n_detected, 512)
+
+            # Convert stored vectors sang tensor
+            student_ids = []
+            stored_tensors_list = []
+
+            for student_id, vector_str in stored_vectors_dict.items():
+                vector = cls.string_to_vector(vector_str)
+                if vector is not None:
+                    student_ids.append(student_id)
+                    stored_tensors_list.append(vector)
+
+            if not stored_tensors_list:
+                return {
+                    'matches': [],
+                    'unmatched_indices': list(range(len(detected_vectors)))
+                }
+
+            stored_tensors = torch.tensor(
+                stored_tensors_list,
+                dtype=torch.float32
+            )  # Shape: (n_students, 512)
+
+            # Tính ma trận khoảng cách Euclidean
+            # Shape: (n_detected, n_students)
+            distances = torch.cdist(detected_tensors, stored_tensors, p=2)
+
+            # Tìm student gần nhất cho mỗi khuôn mặt phát hiện
+            min_distances, min_indices = torch.min(distances, dim=1)
+
+            # Lọc ra các match thỏa mãn threshold
+            matches = []
+            matched_detected_indices = set()
+            matched_student_ids = set()
+
+            for detected_idx, (min_dist, student_idx) in enumerate(
+                    zip(min_distances.tolist(), min_indices.tolist())
+            ):
+                if min_dist < threshold:
+                    student_id = student_ids[student_idx]
+
+                    # Tránh trùng lặp: 1 khuôn mặt chỉ match 1 sinh viên
+                    if student_id not in matched_student_ids:
+                        matches.append({
+                            'detected_index': detected_idx,
+                            'student_id': student_id,
+                            'distance': float(min_dist),
+                            'similarity': max(0.0, 1.0 - float(min_dist))
+                        })
+                        matched_detected_indices.add(detected_idx)
+                        matched_student_ids.add(student_id)
+
+            # Tìm các khuôn mặt không match
+            unmatched_indices = [
+                i for i in range(len(detected_vectors))
+                if i not in matched_detected_indices
+            ]
+
+            return {
+                'matches': matches,
+                'unmatched_indices': unmatched_indices
+            }
+
+        except Exception as e:
+            return {
+                'matches': [],
+                'unmatched_indices': list(range(len(detected_vectors))),
+                'error': str(e)
+            }
+
     @staticmethod
     def vector_to_string(vector):
         """

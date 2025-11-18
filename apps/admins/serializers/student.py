@@ -1,5 +1,12 @@
+import os
+
+import cv2
+import numpy as np
+from django.conf import settings
+from django.core.files.storage import FileSystemStorage
 from rest_framework import serializers
 
+from apps.admins.services.face_embedding_service import FaceEmbeddingService
 from apps.my_built_in.models.sinh_vien import SinhVien
 from apps.my_built_in.models.tai_khoan import TaiKhoan
 
@@ -30,7 +37,6 @@ class StudentDetailSerializer(serializers.ModelSerializer):
         return None
     
     def get_class_student(self, obj):
-        print("obj", obj)
         class_student = obj.class_student
         if class_student:
             return {
@@ -47,7 +53,29 @@ class StudentCreateSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         user_data = validated_data.pop('user')
-        user = UserCreateSerializer().create(user_data)
+        # Lấy file ảnh từ context (được truyền từ view)
+        request = self.context.get('request')
+        image_file = request.FILES.get('user.url')
+        fs = FileSystemStorage(
+            location=os.path.join(settings.MEDIA_ROOT, 'avatars'),
+            base_url=settings.MEDIA_URL + 'avatars/'
+        )
+        filename = fs.save(image_file.name, image_file)
+        relative_path = f"avatars/{filename}"
+        absolute_path = os.path.join(settings.MEDIA_ROOT, relative_path)
+        # Reset con trỏ file về đầu
+        image_file.seek(0)
+
+        # Extract face embedding
+        embedding_result = FaceEmbeddingService.extract_face_embedding(
+            image_path=absolute_path
+        )
+        user_data['vector_embedding'] = embedding_result['vector_str']
+        # Tạo user trước
+        user_serializer = UserCreateSerializer(context=self.context)
+        user = user_serializer.create(user_data)
+
+        # user = UserCreateSerializer().create(user_data)
         student = SinhVien.objects.create(user=user, **validated_data)
         return student
     

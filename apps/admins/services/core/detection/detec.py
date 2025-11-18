@@ -2,6 +2,7 @@ import os
 import cv2
 import numpy as np
 import torch
+from django.conf import settings
 from skimage import transform as trans
 from  apps.admins.services.core.detection.prior_box import PriorBox
 from  apps.admins.services.core.detection.retinaface import RetinaFace
@@ -369,7 +370,7 @@ if __name__ == "__main__":
 
     # Single image detection
     print(f"{CORE_DIR}/football_team.jpg")
-    img = cv2.imread(f"{CORE_DIR}/detection/football_team.jpg")
+    img = cv2.imread(f"{CORE_DIR}/image/nam.jpg")
     detector = FaceDetector(
         img_width=img.shape[1],
         img_height=img.shape[0],
@@ -378,7 +379,7 @@ if __name__ == "__main__":
     faces, boxes, scores, landmarks = detector.detect_single(img)
 
     # Visualize results
-    img_vis = detector.visualize(img, boxes, scores, landmarks, save_path=f"{CORE_DIR}/detection/football_team_result.jpg")
+    img_vis = detector.visualize(img, boxes, scores, landmarks, save_path=f"{CORE_DIR}/image/nam_result.jpg")
 
     # Batch detection
     # batch_imgs = [cv2.imread(f"image_{i}.jpg") for i in range(5)]
