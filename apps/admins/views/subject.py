@@ -61,4 +61,9 @@ class SubjectDetailView(APIView):
             return ResponseFormat.response(data=None)
         except Subject.DoesNotExist:
             return ResponseFormat.response(data=None, case_name="NOT_FOUND", status=404)
-    
+        
+class SubjectListByMajorView(APIView):
+    def get(self, request, major_id):
+        subjects = Subject.objects.filter(major__id = major_id, is_deleted = False)
+        serializer = SubjectSerializer(subjects, many= True)
+        return ResponseFormat.response(data=serializer.data)

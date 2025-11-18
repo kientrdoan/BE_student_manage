@@ -8,6 +8,7 @@ from apps.students.views.semester import SemesterView, CurrentSemesterView
 from apps.students.views.class_student import ClassView
 from apps.students.views.Score import ScoreView
 from apps.students.views.attend import AttendView
+from apps.students.views.lesson import LessonListView
 
 urlpatterns = [
     path('subjects/<int:user_id>', SubjectView.as_view(), name='subject-list'),
@@ -33,6 +34,10 @@ urlpatterns += [
 urlpatterns += [
     path('attends/<int:student_id>/<int:course_id>', AttendView.as_view()),
     # path('scores/<int:course_id>/<int:student_id>', AttendView.as_view()),
+]
+
+urlpatterns += [
+    path('lessons/<int:course_id>', LessonListView.as_view())
 ]
 
 

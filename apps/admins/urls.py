@@ -5,10 +5,10 @@ from apps.admins.views.major import MajorView, MajorDetailView
 from apps.admins.views.classes import ClassView, ClassDetailView
 from apps.admins.views.schedule import ScheduleView, ScheduleStatusView, ScheduleResetView
 from apps.admins.views.student import StudentView, StudentDetailView
-from apps.admins.views.teacher import TeacherView, TeacherDetailView
+from apps.admins.views.teacher import TeacherView, TeacherDetailView, TeacherByDepartmentView
 from apps.admins.views.semester import SemesterView, SemesterDetailView, CurrentSemesterView
 from apps.admins.views.course import CourseView, CourseDetailView, CourseCreateView
-from apps.admins.views.subject import SubjectView, SubjectDetailView
+from apps.admins.views.subject import SubjectView, SubjectDetailView, SubjectListByMajorView
 from apps.admins.views.room import RoomView, RoomDetailView
 
 # Department
@@ -39,6 +39,7 @@ urlpatterns += [
 urlpatterns += [
     path('teachers/', TeacherView.as_view(), name='teacher-list'),
     path('teachers/<int:pk>', TeacherDetailView.as_view(), name='teacher-detail'),
+    path('majors/teachers/<int:department_id>', TeacherByDepartmentView.as_view(), name='teacher-detail'),
 ]
 
 # Semester
@@ -59,6 +60,7 @@ urlpatterns += [
 urlpatterns += [
     path('subjects/', SubjectView.as_view(), name='course-list'),
     path('subjects/<int:pk>', SubjectDetailView.as_view(), name='course-detail'),
+    path('majors/subjects/<int:major_id>', SubjectListByMajorView.as_view(), name='course-detail'),
 ]
 
 # Room

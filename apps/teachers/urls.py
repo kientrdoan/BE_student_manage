@@ -4,7 +4,8 @@ from apps.teachers.views.course import CourseByTeacherView, CourseByTeacherAndSe
 from apps.teachers.views.student import StudentView
 from apps.teachers.views.semester import SemesterView, CurrentSemesterView
 from apps.teachers.views.score import SinhVienMonHocView, ScoreUpdateView
-from apps.teachers.views.attend import AttendView
+from apps.teachers.views.attend import AttendView, AttendCreateView
+from apps.teachers.views.lesson import LessonListView
 
 urlpatterns = [
     path('teachers/<int:pk>', TeacherProfile.as_view(), name='teacher_profile'),
@@ -32,5 +33,10 @@ urlpatterns += [
 
 urlpatterns += [
     path('attends/<int:course_id>', AttendView.as_view()),
+    path('attends', AttendCreateView.as_view()),
     # path('scores/<int:course_id>/<int:student_id>', AttendView.as_view()),
+]
+
+urlpatterns += [
+    path('lessons/<int:course_id>', LessonListView.as_view())
 ]

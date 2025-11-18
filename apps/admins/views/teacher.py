@@ -69,3 +69,11 @@ class TeacherDetailView(APIView):
         teacher.save()
         user.save()
         return ResponseFormat.response(data=None)
+    
+
+class TeacherByDepartmentView(APIView):
+    def get(self, reqeust, department_id):
+        teachers = Teacher.objects.filter(department__id = department_id)
+        serializer = TeacherDetailSerializer(teachers, many= True)
+
+        return ResponseFormat.response(serializer.data)
