@@ -10,29 +10,59 @@ from apps.my_built_in.response import ResponseFormat
 
 from rest_framework.parsers import MultiPartParser, FormParser
 
+
 class StudentView(APIView):
     parser_classes = [MultiPartParser, FormParser]
+
     def get(self, request):
-        is_deleted = request.GET.get("is_deleted")
-        if is_deleted is not None:
-            students = Student.objects.filter(is_deleted = is_deleted)
-        else:
-            students = Student.objects.all()
+        """Lấy danh sách sinh viên"""
+        students = Student.objects.filter(is_deleted=False)
         serializer = StudentDetailSerializer(students, many=True)
         return ResponseFormat.response(data=serializer.data, case_name="SUCCESS")
 
-    def post(self, request): 
-        student_code = Student.objects.filter(student_code = request.data.get("student_code")).first()
+    def post(self, request):
+        """
+        Tạo sinh viên mới.
+        Yêu cầu:
+        - Phải có ảnh khuôn mặt
+        - Ảnh chỉ chứa 1 khuôn mặt
+        - Hệ thống sẽ tự động extract và lưu vector embedding
+        """
+        print("Request data:", request.data)
+        student_code = Student.objects.filter(student_code=request.data.get("student_code")).first()
         if student_code:
             return ResponseFormat.response(data=None, case_name="STUDENT_CODE_EXIST", status=400)
         student_email = User.objects.filter(email=request.data.get("user.email")).first()
         if student_email:
             return ResponseFormat.response(data=None, case_name="EMAIL_EXISTS", status=400)
-        serializer = StudentCreateSerializer(data=request.data)
+
+        # Sử dụng serializer để validate và lưu dữ liệu
+        serializer = StudentCreateSerializer(
+            data=request.data,
+            context={'request': request}
+        )
+
         if serializer.is_valid():
-            serializer.save()
-            return ResponseFormat.response(data=serializer.data, case_name="SUCCESS")
-        return ResponseFormat.response(data=serializer.errors, case_name="INVALID_INPUT")
+            try:
+                student = serializer.save()
+
+                # Trả về thông tin sinh viên đã tạo
+                response_serializer = StudentDetailSerializer(student)
+
+                return ResponseFormat.response(
+                    data=response_serializer.data,
+                    case_name="SUCCESS"
+                )
+            except Exception as e:
+                return ResponseFormat.response(
+                    data={'error': str(e)},
+                    case_name="SERVER_ERROR"
+                )
+
+        return ResponseFormat.response(
+            data=serializer.errors,
+            case_name="INVALID_INPUT"
+        )
     
 
     

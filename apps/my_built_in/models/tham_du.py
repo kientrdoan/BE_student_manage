@@ -4,7 +4,7 @@ class ThamDu(models.Model):
     enrollment = models.ForeignKey('DangKy', db_column="enroll_id", on_delete=models.CASCADE)
     time_slot = models.ForeignKey('BuoiHoc', db_column="time_slot_id", on_delete=models.CASCADE)
 
-    status = models.BooleanField()
+    status = models.CharField(null=True,max_length=50)
     created_at = models.DateTimeField(auto_now_add=True)
     update_at = models.DateTimeField(auto_now=True)
     is_deleted = models.BooleanField(default=False)
