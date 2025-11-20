@@ -348,7 +348,7 @@ class FaceEmbeddingService:
 
             # Tìm student gần nhất cho mỗi khuôn mặt phát hiện
             min_distances, min_indices = torch.min(distances, dim=1)
-
+            print("distances",distances)
             # Lọc ra các match thỏa mãn threshold
             matches = []
             matched_detected_indices = set()
@@ -498,3 +498,103 @@ class FaceEmbeddingService:
                 'has_embedding': result['vector'] is not None
             }
         }
+
+    @classmethod
+    def extract_face_boxes_with_details(cls, image_file=None, image_path=None):
+        """
+        Trích xuất tất cả khuôn mặt với thông tin chi tiết (box, alignment, etc).
+
+        Args:
+            image_file: Django UploadedFile
+            image_path (str): Đường dẫn file ảnh
+
+        Returns:
+            dict: {
+                'success': bool,
+                'faces': list of dict [
+                    {
+                        'vector': list,
+                        'vector_str': str,
+                        'box': list (4 điểm),
+                        'score': float,
+                        'aligned_face': np.ndarray (face image)
+                    }
+                ],
+                'face_count': int,
+                'message': str,
+                'image': np.ndarray (original image for drawing)
+            }
+        """
+        try:
+            # Đọc ảnh
+            if image_file:
+                img = cls.read_image_file(image_file)
+            elif image_path:
+                img = cls.read_image_from_path(image_path)
+            else:
+                return {
+                    'success': False,
+                    'faces': [],
+                    'face_count': 0,
+                    'message': 'No image provided',
+                    'image': None
+                }
+
+            # Khởi tạo detector và recognizer
+            detector = cls.get_detector()
+            recognizer = cls.get_recognizer()
+
+            # Cập nhật kích thước ảnh cho detector
+            detector.im_height = img.shape[0]
+            detector.im_width = img.shape[1]
+            detector.prior_data = detector._create_prior_box()
+
+            # Detect faces
+            faces, boxes, scores, landmarks = detector.detect_single(
+                img,
+                return_aligned=True
+            )
+
+            # Kiểm tra số lượng khuôn mặt
+            if len(faces) == 0:
+                return {
+                    'success': False,
+                    'faces': [],
+                    'face_count': 0,
+                    'message': 'No face detected in image',
+                    'image': img
+                }
+
+            # Trích xuất features từ tất cả khuôn mặt
+            features = recognizer.extract_features(faces)
+
+            # Tạo danh sách kết quả
+            face_results = []
+            for i, feature in enumerate(features):
+                vector = feature.cpu().numpy().tolist()
+                vector_str = json.dumps(vector)
+
+                face_results.append({
+                    'vector': vector,
+                    'vector_str': vector_str,
+                    'box': boxes[i].tolist(),
+                    'score': float(scores[i]),
+                    'aligned_face': faces[i]
+                })
+
+            return {
+                'success': True,
+                'faces': face_results,
+                'face_count': len(faces),
+                'message': f'Successfully extracted {len(faces)} faces',
+                'image': img
+            }
+
+        except Exception as e:
+            return {
+                'success': False,
+                'faces': [],
+                'face_count': 0,
+                'message': f'Error extracting face boxes: {str(e)}',
+                'image': None
+            }

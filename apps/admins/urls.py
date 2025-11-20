@@ -76,14 +76,14 @@ urlpatterns += [
 ]
 
 from apps.admins.views.attendance import (
-    AttendanceView,
+    AttendanceWithValidationView,
     AttendanceDetailView,
     AttendanceStatisticsView
 )
 
 urlpatterns += [
     # Điểm danh bằng khuôn mặt và lấy danh sách điểm danh
-    path('attendance/', AttendanceView.as_view(), name='attendance'),
+    path('attendance/', AttendanceWithValidationView.as_view(), name='attendance'),
 
     # Chi tiết và cập nhật điểm danh
     path('attendance/<int:pk>/', AttendanceDetailView.as_view(), name='attendance-detail'),

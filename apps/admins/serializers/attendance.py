@@ -78,10 +78,13 @@ class AttendanceDetailSerializer(serializers.ModelSerializer):
 
 class AttendanceResultSerializer(serializers.Serializer):
     """
-    Serializer cho kết quả điểm danh
+    Serializer cho kết quả điểm danh (với OCR validation)
     """
     success = serializers.BooleanField()
     message = serializers.CharField()
+    room_code = serializers.CharField(required=False, allow_null=True)
+    expected_room_code = serializers.CharField(required=False, allow_null=True)
+    room_confidence = serializers.FloatField(required=False, allow_null=True)
     total_students = serializers.IntegerField()
     present_count = serializers.IntegerField()
     absent_count = serializers.IntegerField()
@@ -101,6 +104,7 @@ class AttendanceResultSerializer(serializers.Serializer):
         child=AttendanceDetailSerializer(),
         required=False
     )
+    visualized_image = serializers.CharField(required=False, allow_null=True)
 
 
 class AttendanceListSerializer(serializers.ModelSerializer):

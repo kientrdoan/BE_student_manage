@@ -1,6 +1,8 @@
 from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser, FormParser
 from django.db import transaction
+import numpy as np
+import cv2
 
 from apps.my_built_in.models.tham_du import ThamDu
 from apps.my_built_in.models.buoi_hoc import BuoiHoc
@@ -17,25 +19,31 @@ from apps.admins.serializers.attendance import (
 )
 
 from apps.admins.services.face_embedding_service import FaceEmbeddingService
+from apps.admins.services.ocr_service import OCRService
+from apps.admins.services.visualization_service import VisualizationService
 from apps.my_built_in.response import ResponseFormat
+from apps.my_built_in.models.phong_hoc import PhongHoc
 
 
-class AttendanceView(APIView):
+class AttendanceWithValidationView(APIView):
     """
-    API để điểm danh sinh viên bằng nhận dạng khuôn mặt
+    API để điểm danh sinh viên bằng nhận dạng khuôn mặt.
+    Tích hợp OCR để validate mã phòng học.
+
+    Flow:
+    1. OCR để nhận dạng mã phòng từ ảnh
+    2. Validate mã phòng có match với buổi học không
+    3. Extract khuôn mặt từ ảnh
+    4. So sánh khuôn mặt với danh sách sinh viên
+    5. Tạo bản ghi điểm danh Present/Absent
+    6. Vẽ visualization lên ảnh (box phòng, khuôn mặt, MSSV, thống kê)
+    7. Trả ảnh đã xử lý về client
     """
     parser_classes = [MultiPartParser, FormParser]
 
     def post(self, request):
         """
-        Điểm danh sinh viên từ ảnh có nhiều khuôn mặt.
-
-        Flow:
-        1. Validate input (time_slot_id, image)
-        2. Extract tất cả khuôn mặt từ ảnh
-        3. Lấy danh sách sinh viên đã đăng ký lớp của buổi học
-        4. So sánh các khuôn mặt với vector embedding của sinh viên
-        5. Đánh dấu Present/Absent và lưu vào bảng ThamDu
+        Điểm danh sinh viên từ ảnh có nhiều khuôn mặt + validate phòng học.
         """
         # Validate input
         serializer = AttendanceCreateSerializer(data=request.data)
@@ -52,10 +60,86 @@ class AttendanceView(APIView):
 
         try:
             # Lấy thông tin buổi học
-            time_slot = BuoiHoc.objects.select_related('course').get(id=time_slot_id)
+            time_slot = BuoiHoc.objects.select_related(
+                'course__subject',
+                'course__class_st',
+                'course__room'
+            ).get(id=time_slot_id)
             course = time_slot.course
 
-            # Lấy danh sách sinh viên đã đăng ký lớp này
+            # ==================== OCR VALIDATION ====================
+            # Lấy mã phòng từ database
+            if not course.room:
+                return ResponseFormat.response(
+                    data={
+                        'message': 'Lớp học không có phòng được gán. Không thể điểm danh.'
+                    },
+                    case_name="INVALID_INPUT"
+                )
+
+            expected_room_code = course.room.room_code
+
+            # Validate mã phòng từ ảnh so với database
+            ocr_result = OCRService.validate_room_code_with_database(
+                expected_room_code=expected_room_code,
+                image_file=image_file,
+                confidence_threshold=0.5
+            )
+            if not ocr_result['is_matched']:
+                return ResponseFormat.response(
+                    data={
+                        'message': f"Room code mismatch! Expected: {expected_room_code}, "
+                                   f"but OCR detected: {ocr_result['detected_room_code']}. "
+                                   f"Detected texts: {ocr_result['detected_text_list']}",
+                        'room_validation': False,
+                        'expected_room': expected_room_code,
+                        'detected_texts': ocr_result['detected_text_list']
+                    },
+                    case_name="INVALID_INPUT"
+                )
+            # Reset file pointer sau khi OCR
+            image_file.seek(0)
+
+            if not ocr_result['is_valid']:
+                return ResponseFormat.response(
+                    data={
+                        'message': f"OCR Error: {ocr_result['message']}",
+                        'room_validation': False
+                    },
+                    case_name="INVALID_INPUT"
+                )
+
+
+
+            detected_room_code = ocr_result['detected_room_code']
+            room_box = ocr_result.get('matched_box')
+            room_confidence = ocr_result.get('matched_confidence', 0.0)
+            # Kiểm tra mã phòng có match không
+
+            # ==================== EXTRACT FACES ====================
+            # Extract khuôn mặt từ ảnh
+            extraction_result = FaceEmbeddingService.extract_face_boxes_with_details(
+                image_file=image_file
+            )
+
+            # Reset file pointer
+            image_file.seek(0)
+
+            if not extraction_result['success']:
+                return ResponseFormat.response(
+                    data={
+                        'message': extraction_result['message'],
+                        'face_count': extraction_result['face_count']
+                    },
+                    case_name="INVALID_INPUT"
+                )
+
+            original_img = extraction_result['image']
+            detected_faces = extraction_result['faces']
+            detected_vectors = [face['vector'] for face in detected_faces]
+
+            # ==================== GET STUDENTS ====================
+            # Lấy danh sách sinh viên đã đăng ký lớp
             enrollments = DangKy.objects.filter(
                 course=course,
                 is_deleted=False
@@ -89,23 +173,7 @@ class AttendanceView(APIView):
                     case_name="INVALID_INPUT"
                 )
 
-            # Extract tất cả khuôn mặt từ ảnh
-            extraction_result = FaceEmbeddingService.extract_multiple_faces(
-                image_file=image_file
-            )
-
-            if not extraction_result['success']:
-                return ResponseFormat.response(
-                    data={
-                        'message': extraction_result['message'],
-                        'face_count': extraction_result['face_count']
-                    },
-                    case_name="INVALID_INPUT"
-                )
-
-            detected_faces = extraction_result['faces']
-            detected_vectors = [face['vector'] for face in detected_faces]
-
+            # ==================== MATCH FACES ====================
             # So sánh các khuôn mặt với sinh viên
             match_result = FaceEmbeddingService.match_faces_batch(
                 detected_vectors=detected_vectors,
@@ -116,15 +184,21 @@ class AttendanceView(APIView):
             matches = match_result['matches']
             matched_student_ids = set([m['student_id'] for m in matches])
 
+            # ==================== CREATE ATTENDANCE RECORDS ====================
             # Tạo bản ghi điểm danh
             with transaction.atomic():
                 present_students = []
                 absent_students = []
                 attendance_records = []
 
+                # Danh sách khuôn mặt cho visualization
+                matched_faces_viz = []
+                unmatched_faces_viz = []
+
                 # Đánh dấu Present cho sinh viên được nhận diện
                 for match in matches:
                     student_id = match['student_id']
+                    face_idx = match['detected_index']
                     info = student_info[student_id]
 
                     # Kiểm tra xem đã điểm danh chưa
@@ -135,12 +209,10 @@ class AttendanceView(APIView):
                     ).first()
 
                     if existing_attendance:
-                        # Cập nhật nếu đã tồn tại
                         existing_attendance.status = 'Present'
                         existing_attendance.save()
                         attendance_record = existing_attendance
                     else:
-                        # Tạo mới
                         attendance_record = ThamDu.objects.create(
                             enrollment_id=info['enrollment_id'],
                             time_slot=time_slot,
@@ -154,10 +226,16 @@ class AttendanceView(APIView):
                         'similarity': match['similarity']
                     })
 
+                    # Thêm vào danh sách visualization
+                    matched_faces_viz.append({
+                        'box': detected_faces[face_idx]['box'],
+                        'student_code': info['student_code'],
+                        'similarity': match['similarity']
+                    })
+
                 # Đánh dấu Absent cho sinh viên không được nhận diện
                 for student_id, info in student_info.items():
                     if student_id not in matched_student_ids:
-                        # Kiểm tra xem đã điểm danh chưa
                         existing_attendance = ThamDu.objects.filter(
                             enrollment_id=info['enrollment_id'],
                             time_slot=time_slot,
@@ -165,13 +243,11 @@ class AttendanceView(APIView):
                         ).first()
 
                         if existing_attendance:
-                            # Cập nhật nếu đã tồn tại và chưa có mặt
                             if existing_attendance.status != 'Present':
                                 existing_attendance.status = 'Absent'
                                 existing_attendance.save()
                             attendance_record = existing_attendance
                         else:
-                            # Tạo mới
                             attendance_record = ThamDu.objects.create(
                                 enrollment_id=info['enrollment_id'],
                                 time_slot=time_slot,
@@ -181,29 +257,54 @@ class AttendanceView(APIView):
                         attendance_records.append(attendance_record)
                         absent_students.append(info)
 
-            # Chuẩn bị response
+                # Xác định khuôn mặt không match
+                matched_face_indices = set([m['detected_index'] for m in matches])
+                for i, face in enumerate(detected_faces):
+                    if i not in matched_face_indices:
+                        unmatched_faces_viz.append({'box': face['box']})
+
+            # ==================== VISUALIZATION ====================
+            # Vẽ visualization lên ảnh
+            viz_img = VisualizationService.create_attendance_visualization(
+                original_img,
+                matched_faces=matched_faces_viz,
+                unmatched_faces=unmatched_faces_viz,
+                room_code=detected_room_code,
+                room_box=room_box,
+                total_students=len(student_info),
+                present_count=len(present_students)
+            )
+
+            # Convert ảnh sang base64
+            image_base64 = VisualizationService.image_to_base64(viz_img)
+
+            # ==================== PREPARE RESPONSE ====================
             result_data = {
                 'success': True,
                 'message': f'Điểm danh thành công cho buổi học ngày {time_slot.date}',
+                'room_code': detected_room_code,
+                'expected_room_code': expected_room_code,
+                'room_confidence': round(room_confidence, 4),
                 'total_students': len(student_info),
                 'present_count': len(present_students),
                 'absent_count': len(absent_students),
                 'detected_faces': len(detected_faces),
                 'matched_faces': len(matches),
-                'unmatched_faces': len(match_result['unmatched_indices']),
+                'unmatched_faces': len(unmatched_faces_viz),
                 'present_students': present_students,
                 'absent_students': absent_students,
                 'attendance_records': AttendanceDetailSerializer(
                     attendance_records,
                     many=True
-                ).data
+                ).data,
+                'visualized_image': f"data:image/jpeg;base64,{image_base64}"
             }
 
-            result_serializer = AttendanceResultSerializer(data=result_data)
-            result_serializer.is_valid(raise_exception=True)
+            # result_serializer = AttendanceResultSerializer(data=result_data)
+            # result_serializer.is_valid(raise_exception=True)
 
             return ResponseFormat.response(
-                data=result_serializer.data,
+                data=result_data,
                 case_name="SUCCESS"
             )
 
@@ -213,6 +314,8 @@ class AttendanceView(APIView):
                 case_name="NOT_FOUND"
             )
         except Exception as e:
+            import traceback
+            traceback.print_exc()
             return ResponseFormat.response(
                 data={'message': f'Lỗi khi điểm danh: {str(e)}'},
                 case_name="SERVER_ERROR"
@@ -231,7 +334,6 @@ class AttendanceView(APIView):
             )
 
         try:
-            # Lấy danh sách điểm danh
             attendances = ThamDu.objects.filter(
                 time_slot_id=time_slot_id,
                 is_deleted=False
@@ -280,10 +382,7 @@ class AttendanceDetailView(APIView):
             )
 
     def put(self, request, pk):
-        """
-        Cập nhật trạng thái điểm danh thủ công
-        (Dùng khi cần sửa lại điểm danh)
-        """
+        """Cập nhật trạng thái điểm danh thủ công"""
         try:
             attendance = ThamDu.objects.get(id=pk, is_deleted=False)
 
@@ -295,8 +394,6 @@ class AttendanceDetailView(APIView):
 
             if serializer.is_valid():
                 serializer.save()
-
-                # Trả về chi tiết sau khi cập nhật
                 detail_serializer = AttendanceDetailSerializer(attendance)
                 return ResponseFormat.response(
                     data=detail_serializer.data,
@@ -334,14 +431,10 @@ class AttendanceDetailView(APIView):
 
 
 class AttendanceStatisticsView(APIView):
-    """
-    API để xem thống kê điểm danh của buổi học
-    """
+    """API để xem thống kê điểm danh của buổi học"""
 
     def get(self, request):
-        """
-        Lấy thống kê điểm danh theo time_slot_id
-        """
+        """Lấy thống kê điểm danh theo time_slot_id"""
         time_slot_id = request.query_params.get('time_slot_id')
 
         if not time_slot_id:
@@ -353,7 +446,6 @@ class AttendanceStatisticsView(APIView):
         try:
             time_slot = BuoiHoc.objects.select_related('course').get(id=time_slot_id)
 
-            # Đếm số lượng theo trạng thái
             attendances = ThamDu.objects.filter(
                 time_slot_id=time_slot_id,
                 is_deleted=False
@@ -363,9 +455,8 @@ class AttendanceStatisticsView(APIView):
             present = attendances.filter(status='Present').count()
             absent = attendances.filter(status='Absent').count()
             late = attendances.filter(status='Late').count()
-            excused = attendances.filter(status='Excused').count()
+            # excused = attendances.filter(status='Excused').count()
 
-            # Tính tỷ lệ phần trăm
             present_rate = (present / total * 100) if total > 0 else 0
             absent_rate = (absent / total * 100) if total > 0 else 0
 
@@ -377,7 +468,7 @@ class AttendanceStatisticsView(APIView):
                 'present': present,
                 'absent': absent,
                 'late': late,
-                'excused': excused,
+                # 'excused': excused,
                 'present_rate': round(present_rate, 2),
                 'absent_rate': round(absent_rate, 2)
             }
