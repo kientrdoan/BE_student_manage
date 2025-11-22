@@ -11,6 +11,7 @@ from apps.admins.views.course import CourseView, CourseDetailView, CourseCreateV
 from apps.admins.views.subject import SubjectView, SubjectDetailView, SubjectListByMajorView
 from apps.admins.views.room import RoomView, RoomDetailView
 
+
 # Department
 urlpatterns = [
     path('departments/', DepartmentView.as_view(), name='department-list'),
