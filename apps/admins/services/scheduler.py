@@ -103,8 +103,8 @@ class GeneticScheduler:
     """
 
     # Tham số GA
-    POPULATION_SIZE = 100  # Kích thước quần thể
-    GENERATIONS = 200  # Số thế hệ tối đa
+    POPULATION_SIZE = 50  # Kích thước quần thể
+    GENERATIONS = 50  # Số thế hệ tối đa
     CROSSOVER_RATE = 0.8  # Tỷ lệ lai ghép
     MUTATION_RATE = 0.05  # Tỷ lệ đột biến
     ELITISM_COUNT = 10  # Số cá thể ưu tú giữ lại
@@ -120,7 +120,7 @@ class GeneticScheduler:
     BONUS_MORNING = 10  # Thưởng tiết sáng
     BONUS_COMPACT = 5  # Thưởng lịch gọn
 
-    DAYS = ['Monday', 'Tuesday']
+    DAYS = ["Monday", "Tuesday","Wednesday","Thusday","Friday","Saturday"]
 
     def __init__(self, semester_id: int, HOLIDAYS= []):
         self.HOLIDAYS = HOLIDAYS
@@ -558,7 +558,7 @@ class GeneticScheduler:
         for gene in chromosome.genes:
             try:
                 course = LopTinChi.objects.get(id=gene['course_id'])
-
+                print("gene", gene)
                 course.teacher_id = gene['teacher_id']
                 course.room_id = gene['room_id']
                 course.weekday = self.DAYS[gene['day_idx']]
@@ -590,6 +590,7 @@ class GeneticScheduler:
                     course.save()
                     raw_dates = self.generate_course_schedule_dates(course, self.DAYS.index(course.weekday))
                     final_dates = self.adjust_for_holidays(raw_dates)
+                    print("final_date",final_dates)
                     for date in final_dates:
                         BuoiHoc.objects.create(course= course, date = date)
                     

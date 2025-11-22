@@ -11,6 +11,7 @@ from apps.admins.views.course import CourseView, CourseDetailView, CourseCreateV
 from apps.admins.views.subject import SubjectView, SubjectDetailView, SubjectListByMajorView
 from apps.admins.views.room import RoomView, RoomDetailView
 
+
 # Department
 urlpatterns = [
     path('departments/', DepartmentView.as_view(), name='department-list'),
@@ -73,4 +74,21 @@ urlpatterns += [
     path('schedule/', ScheduleView.as_view()),
     path('schedule/status/<int:semester_id>/', ScheduleStatusView.as_view()),
     path('schedule/reset/<int:semester_id>/', ScheduleResetView.as_view()),
+]
+
+from apps.admins.views.attendance import (
+    AttendanceWithValidationView,
+    AttendanceDetailView,
+    AttendanceStatisticsView
+)
+
+urlpatterns += [
+    # Điểm danh bằng khuôn mặt và lấy danh sách điểm danh
+    path('attendance/', AttendanceWithValidationView.as_view(), name='attendance'),
+
+    # Chi tiết và cập nhật điểm danh
+    path('attendance/<int:pk>/', AttendanceDetailView.as_view(), name='attendance-detail'),
+
+    # Thống kê điểm danh
+    path('attendance/statistics/', AttendanceStatisticsView.as_view(), name='attendance-statistics'),
 ]

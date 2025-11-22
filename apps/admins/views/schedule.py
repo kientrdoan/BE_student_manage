@@ -276,14 +276,10 @@ class ScheduleView(APIView):
 
     def _calculate_statistics(self, chromosome):
         """Tính toán thống kê từ chromosome"""
-        DAYS = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"]
+        DAYS = ["Monday", "Tuesday","Wednesday","Thusday","Friday","Saturday"]
         SLOTS = {
             1: "7:00-11:00",
-            2: "13:00-17:00",
-            3: "13:00-15:00",
-            4: "15:15-17:15",
-            5: "17:30-19:30",
-            6: "19:45-21:45"
+            6: "13:00-17:00",
         }
 
         # Thống kê theo ngày
@@ -291,7 +287,6 @@ class ScheduleView(APIView):
         for gene in chromosome.genes:
             day = gene['day_idx']
             day_count[day] = day_count.get(day, 0) + 1
-
         day_distribution = {
             DAYS[day_idx]: count
             for day_idx, count in sorted(day_count.items())
@@ -432,3 +427,7 @@ class ScheduleResetView(APIView):
                 case_name="ERROR",
                 status=500
             )
+
+if __name__ == "__main__":
+    text ="Good evening, Nam"
+    print(f"trong cau nay co so chu 'e' la: {text.count('e')} va co {text.count('o')} chu o")
