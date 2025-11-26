@@ -19,11 +19,11 @@ class AttendView(APIView):
     
 class AttendCreateView(APIView):
     def post(self, request):
-        course_id = request.data.get("enroll_id")
+        course_id = request.data.get("course_id")
         student_id = request.data.get("student_id")
         time_slot_id = request.data.get("time_slot_id")
         status = request.data.get("status")
-        enroll = DangKy.objects.filter(course__id = 9, student__id = student_id, is_deleted = False).first()
+        enroll = DangKy.objects.filter(course__id = course_id, student__id = student_id, is_deleted = False).first()
         if not enroll:
             return ResponseFormat.response(data= None, case_name="NOT_FOUND")
         
@@ -33,7 +33,7 @@ class AttendCreateView(APIView):
         ).first()
 
         if tham_du:
-            tham_du.status = not tham_du.status
+            tham_du.status = status
             tham_du.save()
             return ResponseFormat.response(data=None, case_name="SUCCESS")
 
