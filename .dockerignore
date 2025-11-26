@@ -5,4 +5,8 @@ Dockerfile
 npm-debug.log
 dist
 .vscode
+.idea
+.idea/*
 .env
+.venv
+.venv/*
