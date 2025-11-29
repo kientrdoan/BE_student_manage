@@ -1,0 +1,11 @@
+version: '3.9'
+services:
+  django:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./:/app      # mount code từ host vào container
+    ports:
+      - "8000:8000"
+    command: python3.10 manage.py runserver 0.0.0.0:8000

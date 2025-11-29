@@ -15,6 +15,7 @@ class OCRService:
 
     @classmethod
     def get_ocr(cls):
+        print("call get ocr")
         """Singleton pattern cho PaddleOCR"""
         if cls._ocr_instance is None:
             cls._ocr_instance = PaddleOCR(
@@ -87,6 +88,7 @@ class OCRService:
             }
         """
         try:
+            print(image_file)
             # Đọc ảnh
             if image_file:
                 img = cls.read_image_from_file(image_file)
@@ -100,8 +102,13 @@ class OCRService:
                 }
 
             # Run OCR
+            print("immm", img)
             ocr = cls.get_ocr()
+            print("before result", ocr)
             result = ocr.ocr(img)
+
+            print("result", result)
+
             if not result or not result[0]:
                 return {
                     'success': False,
@@ -194,9 +201,10 @@ class OCRService:
             }
         """
         try:
+            print("call ocr")
             # Extract text từ ảnh
             extraction_result = cls.extract_text_from_image(image_path, image_file)
-
+            
             if not extraction_result['success']:
                 return {
                     'is_valid': False,

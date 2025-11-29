@@ -46,6 +46,7 @@ class AttendanceWithValidationView(APIView):
         Điểm danh sinh viên từ ảnh có nhiều khuôn mặt + validate phòng học.
         """
         # Validate input
+        print("run view")
         serializer = AttendanceCreateSerializer(data=request.data)
         if not serializer.is_valid():
             return ResponseFormat.response(

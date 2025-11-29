@@ -13,7 +13,8 @@ class ClassListSerializer(ModelSerializer):
         if major:
             return {
                 "major_id": major.id,
-                "major_name": major.name
+                "major_name": major.name,
+                "department_id": major.department.id,
             }
         return None
 

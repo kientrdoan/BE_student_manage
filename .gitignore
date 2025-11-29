@@ -12,3 +12,4 @@ apps/admins/services/fake_data.py
 *.jpg
 test_ocr.py
 output
+.venv

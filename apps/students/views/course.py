@@ -9,7 +9,7 @@ from apps.my_built_in.response import ResponseFormat
 class CourseView(APIView):
     def get(self, request, class_id, semester_id):
         try:
-            courses = Course.objects.filter(class_st__id = class_id, semester__id = semester_id)
+            courses = Course.objects.filter(class_st__id = class_id, semester__id = semester_id, is_deleted = False)
         except Course.DoesNotExist:
             return ResponseFormat.response(data=None, case_name="NOT_FOUND", status=404)
         serializer = CourseSerializer(courses, many = True)

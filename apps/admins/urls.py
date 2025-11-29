@@ -40,7 +40,7 @@ urlpatterns += [
 urlpatterns += [
     path('teachers/', TeacherView.as_view(), name='teacher-list'),
     path('teachers/<int:pk>', TeacherDetailView.as_view(), name='teacher-detail'),
-    path('majors/teachers/<int:department_id>', TeacherByDepartmentView.as_view(), name='teacher-detail'),
+    path('departments/teachers/<int:department_id>', TeacherByDepartmentView.as_view(), name='teacher-detail'),
 ]
 
 # Semester
