@@ -88,12 +88,12 @@ class AttendanceWithValidationView(APIView):
             if not ocr_result['is_matched']:
                 return ResponseFormat.response(
                     data={
-                        'message': f"Room code mismatch! Expected: {expected_room_code}, "
-                                   f"but OCR detected: {ocr_result['detected_room_code']}. "
-                                   f"Detected texts: {ocr_result['detected_text_list']}",
-                        'room_validation': False,
-                        'expected_room': expected_room_code,
-                        'detected_texts': ocr_result['detected_text_list']
+                        'message': f"Lưu ý bạn phải ở đúng phòng: {expected_room_code}. Nếu đã đúng vui lòng kiểm tra lại chất lượng hình ảnh!"
+                        #            f"but OCR detected: {ocr_result['detected_room_code']}. "
+                        #            f"Detected texts: {ocr_result['detected_text_list']}",
+                        # 'room_validation': False,
+                        # 'expected_room': expected_room_code,
+                        # 'detected_texts': ocr_result['detected_text_list']
                     },
                     case_name="INVALID_INPUT"
                 )
