@@ -9,6 +9,8 @@ class ThamDu(models.Model):
     update_at = models.DateTimeField(auto_now=True)
     is_deleted = models.BooleanField(default=False)
 
+    url_checkin = models.ImageField(upload_to='checkin', null=True, blank=True)
+
 
     class Meta:
         db_table = 'tham_du'

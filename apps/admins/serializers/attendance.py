@@ -16,7 +16,8 @@ class AttendanceCreateSerializer(serializers.Serializer):
         default=0.8,
         help_text="Ngưỡng để xác định khuôn mặt giống nhau (0.0 - 1.0)"
     )
-
+    # url_checkin = serializers.ImageField(required=False)
+    
     def validate_time_slot_id(self, value):
         """Kiểm tra buổi học có tồn tại không"""
         try:
@@ -146,7 +147,7 @@ class AttendanceUpdateSerializer(serializers.ModelSerializer):
 
     def validate_status(self, value):
         """Validate status"""
-        allowed_statuses = ['Present', 'Absent', 'Late', 'Excused']
+        allowed_statuses = ['Present', 'Absent', 'Late', 'Pending']
         if value not in allowed_statuses:
             raise serializers.ValidationError(
                 f"Status phải là một trong: {', '.join(allowed_statuses)}"

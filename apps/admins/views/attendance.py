@@ -3,6 +3,9 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from django.db import transaction
 import numpy as np
 import cv2
+from django.conf import settings
+from django.core.files.storage import FileSystemStorage
+import os
 
 from apps.my_built_in.models.tham_du import ThamDu
 from apps.my_built_in.models.buoi_hoc import BuoiHoc
@@ -23,6 +26,72 @@ from apps.admins.services.ocr_service import OCRService
 from apps.admins.services.visualization_service import VisualizationService
 from apps.my_built_in.response import ResponseFormat
 from apps.my_built_in.models.phong_hoc import PhongHoc
+
+class AttendanceRequestView(APIView):
+    parser_classes = [MultiPartParser, FormParser]
+
+    def post(self, request):
+        serializer = AttendanceCreateSerializer(data=request.data)
+        if not serializer.is_valid():
+            return ResponseFormat.response(
+                data=serializer.errors,
+                case_name="INVALID_INPUT"
+            )
+
+        validated_data = serializer.validated_data
+        time_slot_id = validated_data['time_slot_id']
+        image_file = validated_data['image']
+        threshold = validated_data.get('threshold', 0.8)
+
+        fs = FileSystemStorage(
+            location=os.path.join(settings.MEDIA_ROOT, 'checkin'),
+            base_url=settings.MEDIA_URL + 'checkin/'
+        )
+        filename = fs.save(image_file.name, image_file)
+        image_file.seek(0)
+
+        try:
+            # Lấy thông tin buổi học
+            time_slot = BuoiHoc.objects.select_related(
+                'course__subject',
+                'course__class_st',
+                'course__room'
+            ).get(id=time_slot_id)
+            course = time_slot.course
+
+
+            image_file.seek(0)
+
+            # ==================== GET STUDENTS ====================
+            # Lấy danh sách sinh viên đã đăng ký lớp
+            enrollments = DangKy.objects.filter(
+                course=course,
+                is_deleted=False
+            ).select_related('student', 'student__user')
+
+            if not enrollments.exists():
+                return ResponseFormat.response(
+                    data={'message': 'Không có sinh viên nào đăng ký lớp này'},
+                    case_name="INVALID_INPUT"
+                )
+
+            return ResponseFormat.response(
+                data=None,
+                case_name="SUCCESS"
+            )
+
+        except BuoiHoc.DoesNotExist:
+            return ResponseFormat.response(
+                data={'message': 'Buổi học không tồn tại'},
+                case_name="NOT_FOUND"
+            )
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return ResponseFormat.response(
+                data={'message': f'Lỗi khi điểm danh: {str(e)}'},
+                case_name="SERVER_ERROR"
+            )
 
 
 class AttendanceWithValidationView(APIView):
@@ -58,6 +127,15 @@ class AttendanceWithValidationView(APIView):
         time_slot_id = validated_data['time_slot_id']
         image_file = validated_data['image']
         threshold = validated_data.get('threshold', 0.8)
+        # image_checkin = validated_data.get('url_checkin', None)
+        fs = FileSystemStorage(
+            location=os.path.join(settings.MEDIA_ROOT, 'checkin'),
+            base_url=settings.MEDIA_URL + 'checkin/'
+        )
+        filename = fs.save(image_file.name, image_file)
+        # relative_path = f"checkin/{filename}"
+        # Reset con trỏ file về đầu
+        image_file.seek(0)
 
         try:
             # Lấy thông tin buổi học
@@ -210,14 +288,16 @@ class AttendanceWithValidationView(APIView):
                     ).first()
 
                     if existing_attendance:
-                        existing_attendance.status = 'Present'
+                        existing_attendance.status = 'Pending',
+                        existing_attendance.url_checkin = image_file
                         existing_attendance.save()
                         attendance_record = existing_attendance
                     else:
                         attendance_record = ThamDu.objects.create(
                             enrollment_id=info['enrollment_id'],
                             time_slot=time_slot,
-                            status='Present'
+                            status='Pending',
+                            url_checkin=image_file
                         )
 
                     attendance_records.append(attendance_record)

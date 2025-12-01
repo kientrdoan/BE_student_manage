@@ -15,7 +15,7 @@ class AttendSerializer(serializers.ModelSerializer):
                 enrollment__student__id = obj.id,
                 enrollment__is_deleted = False,
             )
-            return attend.values("id", "status", "time_slot__date")
+            return attend.values("id", "status", "time_slot__date", 'url_checkin')
         except ThamDu.DoesNotExist:
             return None
         
