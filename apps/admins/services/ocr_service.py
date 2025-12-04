@@ -102,13 +102,8 @@ class OCRService:
                 }
 
             # Run OCR
-            print("immm", img)
             ocr = cls.get_ocr()
-            print("before result", ocr)
             result = ocr.ocr(img)
-
-            print("result", result)
-
             if not result or not result[0]:
                 return {
                     'success': False,
