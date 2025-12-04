@@ -16,6 +16,12 @@ class StudentView(APIView):
 
     def get(self, request):
         """Lấy danh sách sinh viên"""
+        class_id = request.GET.get("class_id", None)
+        print("Class ID:", type(class_id), class_id)
+        if class_id is not None and class_id != "undefined":
+            students = Student.objects.filter(class_student__id=class_id, is_deleted=False)
+            serializer = StudentDetailSerializer(students, many=True)
+            return ResponseFormat.response(data=serializer.data, case_name="SUCCESS")
         students = Student.objects.filter(is_deleted=False)
         serializer = StudentDetailSerializer(students, many=True)
         return ResponseFormat.response(data=serializer.data, case_name="SUCCESS")

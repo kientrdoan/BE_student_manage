@@ -32,7 +32,7 @@ urlpatterns += [
 
 # Student
 urlpatterns += [
-    path('students/', StudentView.as_view(), name='student-list'),
+    path('students', StudentView.as_view(), name='student-list'),
     path('students/<int:pk>', StudentDetailView.as_view(), name='student-detail'),
 ]
 
