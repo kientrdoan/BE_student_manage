@@ -82,7 +82,8 @@ from apps.admins.views.attendance import (
     AttendanceStatisticsView,
     PendingAttendanceImagesView,
     ConfirmAttendanceView,
-    CourseAttendanceListView
+    CourseAttendanceListView,
+    StudentsByImageView
 )
 
 urlpatterns += [
@@ -103,4 +104,7 @@ urlpatterns += [
     
     # Lấy toàn bộ danh sách điểm danh của lớp tín chỉ
     path('attendance/course/', CourseAttendanceListView.as_view(), name='course-attendance-list'),
+    
+    # Lấy danh sách sinh viên theo URL ảnh
+    path('attendance/students-by-image/', StudentsByImageView.as_view(), name='students-by-image'),
 ]
