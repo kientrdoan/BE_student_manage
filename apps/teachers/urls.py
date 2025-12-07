@@ -6,6 +6,12 @@ from apps.teachers.views.semester import SemesterView, CurrentSemesterView
 from apps.teachers.views.score import SinhVienMonHocView, ScoreUpdateView
 from apps.teachers.views.attend import AttendView, AttendCreateView
 from apps.teachers.views.lesson import LessonListView
+from apps.teachers.views.attendance_confirmation import (
+    UnconfirmedAttendanceListView,
+    AttendanceEvidenceView,
+    AttendanceConfirmationView,
+    StudentAttendanceImageView
+)
 
 urlpatterns = [
     path('teachers/<int:pk>', TeacherProfile.as_view(), name='teacher_profile'),
@@ -39,4 +45,19 @@ urlpatterns += [
 
 urlpatterns += [
     path('lessons/<int:course_id>', LessonListView.as_view())
+]
+
+# Attendance Confirmation APIs for Teachers
+urlpatterns += [
+    # Danh sách buổi học chưa xác nhận điểm danh
+    path('attendance/unconfirmed', UnconfirmedAttendanceListView.as_view(), name='unconfirmed_attendance_list'),
+    
+    # Xem bằng chứng điểm danh (ảnh sinh viên) của một buổi học
+    path('attendance/evidence/<int:time_slot_id>', AttendanceEvidenceView.as_view(), name='attendance_evidence'),
+    
+    # Xác nhận hoặc hủy xác nhận điểm danh
+    path('attendance/confirm/<int:time_slot_id>', AttendanceConfirmationView.as_view(), name='attendance_confirm'),
+    
+    # Xem ảnh điểm danh của một sinh viên cụ thể
+    path('attendance/image/<int:attendance_id>', StudentAttendanceImageView.as_view(), name='student_attendance_image'),
 ]

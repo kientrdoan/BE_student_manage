@@ -1,19 +1,13 @@
 from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser, FormParser
 from django.db import transaction
-import numpy as np
-import cv2
-
 from apps.my_built_in.models.tham_du import ThamDu
 from apps.my_built_in.models.buoi_hoc import BuoiHoc
 from apps.my_built_in.models.dang_ky import DangKy
-from apps.my_built_in.models.sinh_vien import SinhVien
-from apps.my_built_in.models.tai_khoan import TaiKhoan
 
 from apps.admins.serializers.attendance import (
     AttendanceCreateSerializer,
     AttendanceDetailSerializer,
-    AttendanceResultSerializer,
     AttendanceListSerializer,
     AttendanceUpdateSerializer
 )
@@ -21,8 +15,14 @@ from apps.admins.serializers.attendance import (
 from apps.admins.services.face_embedding_service import FaceEmbeddingService
 from apps.admins.services.ocr_service import OCRService
 from apps.admins.services.visualization_service import VisualizationService
+from apps.admins.services.image_metadata_service import (
+    ImageMetadataService
+)
+from apps.admins.services.attendance_image_service import (
+    AttendanceImageService
+)
 from apps.my_built_in.response import ResponseFormat
-from apps.my_built_in.models.phong_hoc import PhongHoc
+import traceback
 
 
 class AttendanceWithValidationView(APIView):
@@ -66,14 +66,49 @@ class AttendanceWithValidationView(APIView):
                 'course__class_st',
                 'course__room'
             ).get(id=time_slot_id)
+            
             course = time_slot.course
-
-            # ==================== OCR VALIDATION ====================
+            
+            # ========== VALIDATE IMAGE TIMESTAMP ==========
+            # Kiểm tra thời gian chụp ảnh có hợp lệ không
+            # timestamp_validation = (
+            #     ImageMetadataService.validate_image_timestamp(
+            #         image_file=image_file,
+            #         expected_date=time_slot.date,
+            #         start_period=course.start_period
+            #     )
+            # )
+            
+            # if not timestamp_validation['is_valid']:
+            #     return ResponseFormat.response(
+            #         data={
+            #             'message': timestamp_validation['message'],
+            #             'details': {
+            #                 'expected_date': str(
+            #                     timestamp_validation['expected_date']
+            #                 ),
+            #                 'expected_shift': (
+            #                     timestamp_validation['expected_shift']
+            #                 ),
+            #                 'photo_datetime': str(
+            #                     timestamp_validation['photo_datetime']
+            #                 ) if timestamp_validation['photo_datetime'] else None
+            #             }
+            #         },
+            #         case_name="INVALID_INPUT"
+            #     )
+            
+            # Reset file pointer
+            image_file.seek(0)
+            # ========== OCR VALIDATION ==========
             # Lấy mã phòng từ database
             if not course.room:
                 return ResponseFormat.response(
                     data={
-                        'message': 'Lớp học không có phòng được gán. Không thể điểm danh.'
+                        'message': (
+                            'Lớp học không có phòng được gán. '
+                            'Không thể điểm danh.'
+                        )
                     },
                     case_name="INVALID_INPUT"
                 )
@@ -89,12 +124,12 @@ class AttendanceWithValidationView(APIView):
             if not ocr_result['is_matched']:
                 return ResponseFormat.response(
                     data={
-                        'message': f"Room code mismatch! Expected: {expected_room_code}, "
-                                   f"but OCR detected: {ocr_result['detected_room_code']}. "
-                                   f"Detected texts: {ocr_result['detected_text_list']}",
-                        'room_validation': False,
-                        'expected_room': expected_room_code,
-                        'detected_texts': ocr_result['detected_text_list']
+                        'message': f"Lưu ý bạn phải ở đúng phòng: {expected_room_code}. Nếu đã đúng vui lòng kiểm tra lại chất lượng hình ảnh!"
+                        #            f"but OCR detected: {ocr_result['detected_room_code']}. "
+                        #            f"Detected texts: {ocr_result['detected_text_list']}",
+                        # 'room_validation': False,
+                        # 'expected_room': expected_room_code,
+                        # 'detected_texts': ocr_result['detected_text_list']
                     },
                     case_name="INVALID_INPUT"
                 )
@@ -195,6 +230,9 @@ class AttendanceWithValidationView(APIView):
                 # Danh sách khuôn mặt cho visualization
                 matched_faces_viz = []
                 unmatched_faces_viz = []
+                
+                # Dict để lưu thông tin ảnh sẽ được lưu
+                faces_to_save = []
 
                 # Đánh dấu Present cho sinh viên được nhận diện
                 for match in matches:
@@ -202,18 +240,26 @@ class AttendanceWithValidationView(APIView):
                     face_idx = match['detected_index']
                     info = student_info[student_id]
 
-                    # Kiểm tra xem đã điểm danh chưa
+                    # Kiểm tra xem đã điểm danh chưa (đã có ảnh chưa)
                     existing_attendance = ThamDu.objects.filter(
                         enrollment_id=info['enrollment_id'],
                         time_slot=time_slot,
                         is_deleted=False
                     ).first()
 
+                    # Chỉ lưu ảnh nếu chưa có ảnh điểm danh (lần đầu tiên)
+                    should_save_image = False
+                    
                     if existing_attendance:
                         existing_attendance.status = 'Present'
+                        # Chỉ cập nhật ảnh nếu chưa có
+                        if not existing_attendance.attendance_image:
+                            should_save_image = True
                         existing_attendance.save()
                         attendance_record = existing_attendance
                     else:
+                        # Tạo mới - cần lưu ảnh
+                        should_save_image = True
                         attendance_record = ThamDu.objects.create(
                             enrollment_id=info['enrollment_id'],
                             time_slot=time_slot,
@@ -224,15 +270,25 @@ class AttendanceWithValidationView(APIView):
                     present_students.append({
                         **info,
                         'distance': match['distance'],
-                        'similarity': match['similarity']
+                        'similarity': match['similarity'],
+                        'has_image': bool(attendance_record.attendance_image)
                     })
 
-                    # Thêm vào danh sách visualization
-                    matched_faces_viz.append({
+                    # Thêm vào danh sách visualization (luôn vẽ box để preview)
+                    face_data = {
                         'box': detected_faces[face_idx]['box'],
                         'student_code': info['student_code'],
-                        'similarity': match['similarity']
-                    })
+                        'similarity': match['similarity'],
+                        'attendance_id': attendance_record.id
+                    }
+                    matched_faces_viz.append(face_data)
+                    
+                    # Lưu thông tin để save ảnh sau
+                    if should_save_image:
+                        faces_to_save.append({
+                            'face_data': face_data,
+                            'attendance_record': attendance_record
+                        })
 
                 # Đánh dấu Absent cho sinh viên không được nhận diện
                 for student_id, info in student_info.items():
@@ -263,6 +319,33 @@ class AttendanceWithValidationView(APIView):
                 for i, face in enumerate(detected_faces):
                     if i not in matched_face_indices:
                         unmatched_faces_viz.append({'box': face['box']})
+                
+                # ==================== SAVE INDIVIDUAL ATTENDANCE IMAGES ====================
+                # Lưu ảnh cho từng sinh viên (chỉ những người chưa có ảnh)
+                saved_images_info = {}
+                if faces_to_save:
+                    for item in faces_to_save:
+                        face_data = item['face_data']
+                        attendance_record = item['attendance_record']
+                        
+                        # Lưu ảnh cá nhân
+                        save_result = AttendanceImageService.save_individual_attendance_image(
+                            original_img=original_img,
+                            face_box=face_data['box'],
+                            student_code=face_data['student_code'],
+                            time_slot_id=time_slot_id,
+                            similarity=face_data['similarity']
+                        )
+                        
+                        if save_result['success']:
+                            # Cập nhật URL ảnh vào bản ghi điểm danh
+                            attendance_record.attendance_image = save_result['file_url']
+                            attendance_record.save()
+                            
+                            saved_images_info[face_data['student_code']] = {
+                                'url': save_result['file_url'],
+                                'path': save_result['file_path']
+                            }
 
             # ==================== VISUALIZATION ====================
             # Vẽ visualization lên ảnh
@@ -283,6 +366,11 @@ class AttendanceWithValidationView(APIView):
             result_data = {
                 'success': True,
                 'message': f'Điểm danh thành công cho buổi học ngày {time_slot.date}',
+                # 'timestamp_validation': {
+                #     'photo_datetime': str(timestamp_validation['photo_datetime']),
+                #     'expected_date': str(timestamp_validation['expected_date']),
+                #     'shift': timestamp_validation['expected_shift']
+                # },
                 'room_code': detected_room_code,
                 'expected_room_code': expected_room_code,
                 'room_confidence': round(room_confidence, 4),
@@ -292,6 +380,7 @@ class AttendanceWithValidationView(APIView):
                 'detected_faces': len(detected_faces),
                 'matched_faces': len(matches),
                 'unmatched_faces': len(unmatched_faces_viz),
+                'saved_new_images': len(saved_images_info),
                 'present_students': present_students,
                 'absent_students': absent_students,
                 'attendance_records': AttendanceDetailSerializer(

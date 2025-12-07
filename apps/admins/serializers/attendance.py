@@ -47,6 +47,7 @@ class AttendanceDetailSerializer(serializers.ModelSerializer):
             'time_slot',
             'student',
             'status',
+            'attendance_image',
             'created_at',
             'update_at'
         ]
@@ -123,6 +124,7 @@ class AttendanceListSerializer(serializers.ModelSerializer):
             'student_code',
             'student_name',
             'status',
+            'attendance_image',
             'subject_name',
             'date',
             'created_at'
@@ -152,3 +154,4 @@ class AttendanceUpdateSerializer(serializers.ModelSerializer):
                 f"Status phải là một trong: {', '.join(allowed_statuses)}"
             )
         return value
+
