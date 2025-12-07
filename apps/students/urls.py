@@ -9,6 +9,7 @@ from apps.students.views.class_student import ClassView
 from apps.students.views.Score import ScoreView
 from apps.students.views.attend import AttendView
 from apps.students.views.lesson import LessonListView
+from apps.students.views.upload_attendance import StudentUploadAttendanceImageView
 
 urlpatterns = [
     path('subjects/<int:user_id>', SubjectView.as_view(), name='subject-list'),
@@ -39,5 +40,11 @@ urlpatterns += [
 urlpatterns += [
     path('lessons/<int:course_id>', LessonListView.as_view())
 ]
+
+# Attendance Upload API for Students
+urlpatterns += [
+    path('attendance/upload/', StudentUploadAttendanceImageView.as_view(), name='student_upload_attendance'),
+]
+
 
 

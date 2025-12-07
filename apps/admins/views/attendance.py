@@ -15,14 +15,12 @@ from apps.admins.serializers.attendance import (
 from apps.admins.services.face_embedding_service import FaceEmbeddingService
 from apps.admins.services.ocr_service import OCRService
 from apps.admins.services.visualization_service import VisualizationService
-from apps.admins.services.image_metadata_service import (
-    ImageMetadataService
-)
-from apps.admins.services.attendance_image_service import (
-    AttendanceImageService
-)
 from apps.my_built_in.response import ResponseFormat
-import traceback
+import os
+from django.conf import settings
+from datetime import datetime
+from PIL import Image
+import cv2
 
 
 class AttendanceWithValidationView(APIView):
@@ -57,7 +55,7 @@ class AttendanceWithValidationView(APIView):
         validated_data = serializer.validated_data
         time_slot_id = validated_data['time_slot_id']
         image_file = validated_data['image']
-        threshold = validated_data.get('threshold', 0.8)
+        threshold = validated_data.get('threshold', 0.95)
 
         try:
             # Lấy thông tin buổi học
@@ -121,15 +119,15 @@ class AttendanceWithValidationView(APIView):
                 image_file=image_file,
                 confidence_threshold=0.5
             )
+            print("ocr_result", ocr_result)
             if not ocr_result['is_matched']:
                 return ResponseFormat.response(
                     data={
-                        'message': f"Lưu ý bạn phải ở đúng phòng: {expected_room_code}. Nếu đã đúng vui lòng kiểm tra lại chất lượng hình ảnh!"
-                        #            f"but OCR detected: {ocr_result['detected_room_code']}. "
-                        #            f"Detected texts: {ocr_result['detected_text_list']}",
-                        # 'room_validation': False,
-                        # 'expected_room': expected_room_code,
-                        # 'detected_texts': ocr_result['detected_text_list']
+                        'message': (
+                            f"Lưu ý bạn phải ở đúng phòng: "
+                            f"{expected_room_code}. Nếu đã đúng vui lòng "
+                            f"kiểm tra lại chất lượng hình ảnh!"
+                        )
                     },
                     case_name="INVALID_INPUT"
                 )
@@ -145,17 +143,16 @@ class AttendanceWithValidationView(APIView):
                     case_name="INVALID_INPUT"
                 )
 
-
-
             detected_room_code = ocr_result['detected_room_code']
             room_box = ocr_result.get('matched_box')
             room_confidence = ocr_result.get('matched_confidence', 0.0)
-            # Kiểm tra mã phòng có match không
 
             # ==================== EXTRACT FACES ====================
             # Extract khuôn mặt từ ảnh
-            extraction_result = FaceEmbeddingService.extract_face_boxes_with_details(
-                image_file=image_file
+            extraction_result = (
+                FaceEmbeddingService.extract_face_boxes_with_details(
+                    image_file=image_file
+                )
             )
 
             # Reset file pointer
@@ -199,13 +196,20 @@ class AttendanceWithValidationView(APIView):
                         'enrollment_id': enrollment.id,
                         'student_id': student.id,
                         'student_code': student.student_code,
-                        'full_name': f"{student.user.first_name} {student.user.last_name}",
+                        'full_name': (
+                            f"{student.user.first_name} "
+                            f"{student.user.last_name}"
+                        ),
                         'email': student.user.email
                     }
 
             if not student_vectors:
                 return ResponseFormat.response(
-                    data={'message': 'Không có sinh viên nào có vector embedding'},
+                    data={
+                        'message': (
+                            'Không có sinh viên nào có vector embedding'
+                        )
+                    },
                     case_name="INVALID_INPUT"
                 )
 
@@ -220,144 +224,136 @@ class AttendanceWithValidationView(APIView):
             matches = match_result['matches']
             matched_student_ids = set([m['student_id'] for m in matches])
 
-            # ==================== CREATE ATTENDANCE RECORDS ====================
-            # Tạo bản ghi điểm danh
+            # ========== CREATE ATTENDANCE RECORDS ==========
+            # Chỉ cập nhật sinh viên từ Absent -> Pending
+            # Không đè lên Present hoặc Pending
+
+            # Đầu tiên: Lưu ảnh visualization để có URL
+            viz_img = VisualizationService.create_attendance_visualization(
+                original_img,
+                matched_faces=[
+                    {
+                        'box': detected_faces[match['detected_index']]['box'],
+                        'student_code': (
+                            student_info[match['student_id']]['student_code']
+                        ),
+                        'distance': round(match['distance'], 4)
+                    }
+                    for match in matches
+                ],
+                unmatched_faces=[
+                    {'box': detected_faces[i]['box']}
+                    for i in range(len(detected_faces))
+                    if i not in set([m['detected_index'] for m in matches])
+                ],
+                room_code=detected_room_code,
+                room_box=room_box,
+                total_students=len(student_info),
+                present_count=len(matches)
+            )
+
+            # Lưu ảnh visualization vào thư mục media
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            image_dir = os.path.join(
+                settings.MEDIA_ROOT,
+                'attendance_uploads',
+                f'timeslot_{time_slot_id}'
+            )
+            os.makedirs(image_dir, exist_ok=True)
+
+            image_filename = f'attendance_{timestamp}.jpg'
+            image_path = os.path.join(image_dir, image_filename)
+            
+            # Convert numpy array (BGR) sang PIL Image (RGB) để save
+            viz_img_rgb = cv2.cvtColor(viz_img, cv2.COLOR_BGR2RGB)
+            pil_image = Image.fromarray(viz_img_rgb)
+            pil_image.save(image_path, 'JPEG', quality=95)
+
+            # Tạo URL tương đối
+            image_url = (
+                f'/media/attendance_uploads/'
+                f'timeslot_{time_slot_id}/{image_filename}'
+            )
+            
             with transaction.atomic():
-                present_students = []
-                absent_students = []
-                attendance_records = []
+                pending_students = []
+                already_processed_students = []
+                not_detected_students = []
 
-                # Danh sách khuôn mặt cho visualization
-                matched_faces_viz = []
-                unmatched_faces_viz = []
-                
-                # Dict để lưu thông tin ảnh sẽ được lưu
-                faces_to_save = []
-
-                # Đánh dấu Present cho sinh viên được nhận diện
+                # Cập nhật sinh viên được nhận diện từ Absent -> Pending
                 for match in matches:
                     student_id = match['student_id']
-                    face_idx = match['detected_index']
                     info = student_info[student_id]
+                    distance = round(match['distance'], 4)
 
-                    # Kiểm tra xem đã điểm danh chưa (đã có ảnh chưa)
-                    existing_attendance = ThamDu.objects.filter(
+                    # Lấy bản ghi điểm danh hiện tại
+                    attendance = ThamDu.objects.filter(
                         enrollment_id=info['enrollment_id'],
                         time_slot=time_slot,
                         is_deleted=False
                     ).first()
 
-                    # Chỉ lưu ảnh nếu chưa có ảnh điểm danh (lần đầu tiên)
-                    should_save_image = False
-                    
-                    if existing_attendance:
-                        existing_attendance.status = 'Present'
-                        # Chỉ cập nhật ảnh nếu chưa có
-                        if not existing_attendance.attendance_image:
-                            should_save_image = True
-                        existing_attendance.save()
-                        attendance_record = existing_attendance
-                    else:
-                        # Tạo mới - cần lưu ảnh
-                        should_save_image = True
-                        attendance_record = ThamDu.objects.create(
+                    if not attendance:
+                        # Không tồn tại -> tạo mới (edge case)
+                        attendance = ThamDu.objects.create(
                             enrollment_id=info['enrollment_id'],
                             time_slot=time_slot,
-                            status='Present'
+                            status='Pending',
+                            attendance_image=image_url
                         )
-
-                    attendance_records.append(attendance_record)
-                    present_students.append({
-                        **info,
-                        'distance': match['distance'],
-                        'similarity': match['similarity'],
-                        'has_image': bool(attendance_record.attendance_image)
-                    })
-
-                    # Thêm vào danh sách visualization (luôn vẽ box để preview)
-                    face_data = {
-                        'box': detected_faces[face_idx]['box'],
-                        'student_code': info['student_code'],
-                        'similarity': match['similarity'],
-                        'attendance_id': attendance_record.id
-                    }
-                    matched_faces_viz.append(face_data)
-                    
-                    # Lưu thông tin để save ảnh sau
-                    if should_save_image:
-                        faces_to_save.append({
-                            'face_data': face_data,
-                            'attendance_record': attendance_record
+                        pending_students.append({
+                            **info,
+                            'distance': distance,
+                            'attendance_id': attendance.id,
+                            'previous_status': None
+                        })
+                    elif attendance.status == 'Absent':
+                        # Chỉ cập nhật nếu đang là Absent
+                        attendance.status = 'Pending'
+                        attendance.attendance_image = image_url
+                        attendance.save()
+                        pending_students.append({
+                            **info,
+                            'distance': distance,
+                            'attendance_id': attendance.id,
+                            'previous_status': 'Absent'
+                        })
+                    else:
+                        # Đã là Present hoặc Pending -> không đè
+                        already_processed_students.append({
+                            **info,
+                            'current_status': attendance.status,
+                            'attendance_id': attendance.id
                         })
 
-                # Đánh dấu Absent cho sinh viên không được nhận diện
-                for student_id, info in student_info.items():
-                    if student_id not in matched_student_ids:
-                        existing_attendance = ThamDu.objects.filter(
-                            enrollment_id=info['enrollment_id'],
-                            time_slot=time_slot,
-                            is_deleted=False
-                        ).first()
+                # Lấy danh sách sinh viên vẫn Absent
+                # (không nhận diện được)
+                matched_enrollment_ids = [
+                    info['enrollment_id']
+                    for info in student_info.values()
+                    if info['student_id'] in matched_student_ids
+                ]
+                absent_attendances = ThamDu.objects.filter(
+                    time_slot=time_slot,
+                    status='Absent',
+                    is_deleted=False
+                ).exclude(
+                    enrollment_id__in=matched_enrollment_ids
+                ).select_related('enrollment__student__user')
 
-                        if existing_attendance:
-                            if existing_attendance.status != 'Present':
-                                existing_attendance.status = 'Absent'
-                                existing_attendance.save()
-                            attendance_record = existing_attendance
-                        else:
-                            attendance_record = ThamDu.objects.create(
-                                enrollment_id=info['enrollment_id'],
-                                time_slot=time_slot,
-                                status='Absent'
-                            )
-
-                        attendance_records.append(attendance_record)
-                        absent_students.append(info)
-
-                # Xác định khuôn mặt không match
-                matched_face_indices = set([m['detected_index'] for m in matches])
-                for i, face in enumerate(detected_faces):
-                    if i not in matched_face_indices:
-                        unmatched_faces_viz.append({'box': face['box']})
-                
-                # ==================== SAVE INDIVIDUAL ATTENDANCE IMAGES ====================
-                # Lưu ảnh cho từng sinh viên (chỉ những người chưa có ảnh)
-                saved_images_info = {}
-                if faces_to_save:
-                    for item in faces_to_save:
-                        face_data = item['face_data']
-                        attendance_record = item['attendance_record']
-                        
-                        # Lưu ảnh cá nhân
-                        save_result = AttendanceImageService.save_individual_attendance_image(
-                            original_img=original_img,
-                            face_box=face_data['box'],
-                            student_code=face_data['student_code'],
-                            time_slot_id=time_slot_id,
-                            similarity=face_data['similarity']
-                        )
-                        
-                        if save_result['success']:
-                            # Cập nhật URL ảnh vào bản ghi điểm danh
-                            attendance_record.attendance_image = save_result['file_url']
-                            attendance_record.save()
-                            
-                            saved_images_info[face_data['student_code']] = {
-                                'url': save_result['file_url'],
-                                'path': save_result['file_path']
-                            }
-
-            # ==================== VISUALIZATION ====================
-            # Vẽ visualization lên ảnh
-            viz_img = VisualizationService.create_attendance_visualization(
-                original_img,
-                matched_faces=matched_faces_viz,
-                unmatched_faces=unmatched_faces_viz,
-                room_code=detected_room_code,
-                room_box=room_box,
-                total_students=len(student_info),
-                present_count=len(present_students)
-            )
+                for attendance in absent_attendances:
+                    student = attendance.enrollment.student
+                    not_detected_students.append({
+                        'enrollment_id': attendance.enrollment_id,
+                        'student_id': student.id,
+                        'student_code': student.student_code,
+                        'full_name': (
+                            f"{student.user.first_name} "
+                            f"{student.user.last_name}"
+                        ),
+                        'email': student.user.email,
+                        'attendance_id': attendance.id
+                    })
 
             # Convert ảnh sang base64
             image_base64 = VisualizationService.image_to_base64(viz_img)
@@ -365,33 +361,25 @@ class AttendanceWithValidationView(APIView):
             # ==================== PREPARE RESPONSE ====================
             result_data = {
                 'success': True,
-                'message': f'Điểm danh thành công cho buổi học ngày {time_slot.date}',
-                # 'timestamp_validation': {
-                #     'photo_datetime': str(timestamp_validation['photo_datetime']),
-                #     'expected_date': str(timestamp_validation['expected_date']),
-                #     'shift': timestamp_validation['expected_shift']
-                # },
+                'message': (
+                    f'Điểm danh thành công cho buổi học '
+                    f'ngày {time_slot.date}'
+                ),
                 'room_code': detected_room_code,
                 'expected_room_code': expected_room_code,
                 'room_confidence': round(room_confidence, 4),
                 'total_students': len(student_info),
-                'present_count': len(present_students),
-                'absent_count': len(absent_students),
+                'pending_count': len(pending_students),
+                'already_processed_count': len(already_processed_students),
+                'not_detected_count': len(not_detected_students),
                 'detected_faces': len(detected_faces),
                 'matched_faces': len(matches),
-                'unmatched_faces': len(unmatched_faces_viz),
-                'saved_new_images': len(saved_images_info),
-                'present_students': present_students,
-                'absent_students': absent_students,
-                'attendance_records': AttendanceDetailSerializer(
-                    attendance_records,
-                    many=True
-                ).data,
+                'image_url': image_url,
+                'pending_students': pending_students,
+                'already_processed_students': already_processed_students,
+                'not_detected_students': not_detected_students,
                 'visualized_image': f"data:image/jpeg;base64,{image_base64}"
             }
-
-            # result_serializer = AttendanceResultSerializer(data=result_data)
-            # result_serializer.is_valid(raise_exception=True)
 
             return ResponseFormat.response(
                 data=result_data,
@@ -534,7 +522,9 @@ class AttendanceStatisticsView(APIView):
             )
 
         try:
-            time_slot = BuoiHoc.objects.select_related('course').get(id=time_slot_id)
+            time_slot = BuoiHoc.objects.select_related(
+                'course'
+            ).get(id=time_slot_id)
 
             attendances = ThamDu.objects.filter(
                 time_slot_id=time_slot_id,
@@ -544,23 +534,29 @@ class AttendanceStatisticsView(APIView):
             total = attendances.count()
             present = attendances.filter(status='Present').count()
             absent = attendances.filter(status='Absent').count()
+            pending = attendances.filter(status='Pending').count()
             late = attendances.filter(status='Late').count()
-            # excused = attendances.filter(status='Excused').count()
 
             present_rate = (present / total * 100) if total > 0 else 0
             absent_rate = (absent / total * 100) if total > 0 else 0
+            pending_rate = (pending / total * 100) if total > 0 else 0
 
             statistics = {
                 'time_slot_id': time_slot.id,
                 'date': time_slot.date,
-                'course_name': time_slot.course.subject.name if time_slot.course and time_slot.course.subject else None,
+                'course_name': (
+                    time_slot.course.subject.name
+                    if time_slot.course and time_slot.course.subject
+                    else None
+                ),
                 'total_students': total,
                 'present': present,
                 'absent': absent,
+                'pending': pending,
                 'late': late,
-                # 'excused': excused,
                 'present_rate': round(present_rate, 2),
-                'absent_rate': round(absent_rate, 2)
+                'absent_rate': round(absent_rate, 2),
+                'pending_rate': round(pending_rate, 2)
             }
 
             return ResponseFormat.response(
@@ -572,4 +568,325 @@ class AttendanceStatisticsView(APIView):
             return ResponseFormat.response(
                 data={'message': 'Buổi học không tồn tại'},
                 case_name="NOT_FOUND"
+            )
+
+
+class PendingAttendanceImagesView(APIView):
+    """
+    API để giáo viên xem danh sách ảnh có sinh viên Pending
+    Trả về các ảnh unique và danh sách sinh viên trong mỗi ảnh
+    """
+    
+    def get(self, request):
+        """
+        Lấy danh sách ảnh có sinh viên Pending theo time_slot_id
+        """
+        time_slot_id = request.query_params.get('time_slot_id')
+        
+        if not time_slot_id:
+            return ResponseFormat.response(
+                data={'message': 'Thiếu tham số time_slot_id'},
+                case_name="INVALID_INPUT"
+            )
+        
+        try:
+            time_slot = BuoiHoc.objects.select_related(
+                'course__subject'
+            ).get(id=time_slot_id)
+
+            # Lấy tất cả bản ghi Pending của buổi học
+            pending_attendances = ThamDu.objects.filter(
+                time_slot_id=time_slot_id,
+                status='Pending',
+                is_deleted=False
+            ).exclude(
+                attendance_image__isnull=True
+            ).exclude(
+                attendance_image=''
+            ).select_related(
+                'enrollment__student__user'
+            ).order_by('attendance_image')
+            
+            # Group sinh viên theo ảnh (lấy unique images)
+            images_dict = {}
+            for attendance in pending_attendances:
+                image_url = attendance.attendance_image
+                if image_url not in images_dict:
+                    images_dict[image_url] = []
+                
+                student = attendance.enrollment.student
+                images_dict[image_url].append({
+                    'attendance_id': attendance.id,
+                    'student_id': student.id,
+                    'student_code': student.student_code,
+                    'full_name': (
+                        f"{student.user.first_name} "
+                        f"{student.user.last_name}"
+                    ),
+                    'email': student.user.email
+                })
+            
+            # Tạo response với danh sách ảnh và sinh viên
+            result = []
+            for image_url, students in images_dict.items():
+                # Tạo full URL cho ảnh
+                if image_url.startswith('/'):
+                    full_image_url = request.build_absolute_uri(image_url)
+                else:
+                    full_image_url = image_url
+
+                result.append({
+                    'image_url': full_image_url,
+                    'student_count': len(students),
+                    'students': students
+                })
+            
+            return ResponseFormat.response(
+                data={
+                    'time_slot_id': time_slot.id,
+                    'date': str(time_slot.date),
+                    'course_name': (
+                        time_slot.course.subject.name
+                        if time_slot.course and time_slot.course.subject
+                        else None
+                    ),
+                    'total_images': len(result),
+                    'total_pending_students': sum(
+                        img['student_count'] for img in result
+                    ),
+                    'images': result
+                },
+                case_name="SUCCESS"
+            )
+            
+        except BuoiHoc.DoesNotExist:
+            return ResponseFormat.response(
+                data={'message': 'Buổi học không tồn tại'},
+                case_name="NOT_FOUND"
+            )
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return ResponseFormat.response(
+                data={'message': f'Lỗi khi lấy danh sách ảnh: {str(e)}'},
+                case_name="SERVER_ERROR"
+            )
+
+
+class ConfirmAttendanceView(APIView):
+    """
+    API để giáo viên xác nhận hoặc từ chối sinh viên Pending
+    """
+    
+    def post(self, request):
+        """
+        Xác nhận/từ chối danh sách sinh viên
+        
+        Request body:
+        {
+            "approved_attendance_ids": [1, 2, 3],  # Chuyển sang Present
+            "rejected_attendance_ids": [4, 5]      # Chuyển về Absent
+        }
+        """
+        approved_ids = request.data.get('approved_attendance_ids', [])
+        rejected_ids = request.data.get('rejected_attendance_ids', [])
+        
+        if not approved_ids and not rejected_ids:
+            return ResponseFormat.response(
+                data={
+                    'message': (
+                        'Cần cung cấp ít nhất một danh sách '
+                        'attendance_ids'
+                    )
+                },
+                case_name="INVALID_INPUT"
+            )
+        
+        try:
+            with transaction.atomic():
+                approved_count = 0
+                rejected_count = 0
+                
+                # Xác nhận Present
+                if approved_ids:
+                    approved_count = ThamDu.objects.filter(
+                        id__in=approved_ids,
+                        status='Pending',
+                        is_deleted=False
+                    ).update(status='Present')
+                
+                # Từ chối -> Absent
+                if rejected_ids:
+                    rejected_attendances = ThamDu.objects.filter(
+                        id__in=rejected_ids,
+                        status='Pending',
+                        is_deleted=False
+                    )
+                    # Xóa URL ảnh khi từ chối
+                    rejected_count = rejected_attendances.update(
+                        status='Absent',
+                        attendance_image=None
+                    )
+                
+                return ResponseFormat.response(
+                    data={
+                        'message': 'Xác nhận điểm danh thành công',
+                        'approved_count': approved_count,
+                        'rejected_count': rejected_count
+                    },
+                    case_name="SUCCESS"
+                )
+                
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return ResponseFormat.response(
+                data={'message': f'Lỗi khi xác nhận điểm danh: {str(e)}'},
+                case_name="SERVER_ERROR"
+            )
+
+
+class CourseAttendanceListView(APIView):
+    """
+    API để lấy toàn bộ danh sách điểm danh của sinh viên trong 1 lớp tín chỉ
+    """
+
+    def get(self, request):
+        """
+        Lấy danh sách điểm danh của tất cả sinh viên trong lớp tín chỉ
+        
+        Query params:
+        - course_id: ID của lớp tín chỉ (bắt buộc)
+        """
+        from apps.my_built_in.models.lop_tin_chi import LopTinChi
+        from apps.my_built_in.models.dang_ky import DangKy
+        
+        course_id = request.query_params.get('course_id')
+
+        if not course_id:
+            return ResponseFormat.response(
+                data={'message': 'Thiếu tham số course_id'},
+                case_name="INVALID_INPUT"
+            )
+
+        try:
+            # Kiểm tra lớp tín chỉ tồn tại
+            course = LopTinChi.objects.select_related(
+                'subject',
+                'teacher__user'
+            ).get(id=course_id)
+
+            # Lấy tất cả sinh viên đã đăng ký
+            enrollments = DangKy.objects.filter(
+                course_id=course_id,
+                is_deleted=False
+            ).select_related('student__user')
+
+            # Lấy tất cả buổi học của lớp
+            time_slots = BuoiHoc.objects.filter(
+                course_id=course_id
+            ).order_by('date')
+
+            # Tạo dictionary để group điểm danh theo sinh viên
+            students_data = []
+
+            for enrollment in enrollments:
+                student = enrollment.student
+                
+                # Lấy tất cả điểm danh của sinh viên này
+                attendances = ThamDu.objects.filter(
+                    enrollment=enrollment,
+                    is_deleted=False
+                ).select_related('time_slot').order_by('time_slot__date')
+
+                # Tạo dict để map time_slot_id -> attendance
+                attendance_map = {
+                    att.time_slot_id: att for att in attendances
+                }
+
+                # Tạo danh sách điểm danh theo từng buổi
+                attendance_records = []
+                for time_slot in time_slots:
+                    attendance = attendance_map.get(time_slot.id)
+                    if attendance:
+                        attendance_records.append({
+                            'time_slot_id': time_slot.id,
+                            'date': str(time_slot.date),
+                            'status': attendance.status,
+                            'attendance_image': attendance.attendance_image,
+                            'attendance_id': attendance.id
+                        })
+                    else:
+                        # Chưa có bản ghi điểm danh
+                        attendance_records.append({
+                            'time_slot_id': time_slot.id,
+                            'date': str(time_slot.date),
+                            'status': None,
+                            'attendance_image': None,
+                            'attendance_id': None
+                        })
+
+                # Tính thống kê
+                total_slots = len(time_slots)
+                present_count = attendances.filter(status='Present').count()
+                absent_count = attendances.filter(status='Absent').count()
+                pending_count = attendances.filter(status='Pending').count()
+                late_count = attendances.filter(status='Late').count()
+
+                students_data.append({
+                    'student_id': student.id,
+                    'student_code': student.student_code,
+                    'full_name': (
+                        f"{student.user.first_name} "
+                        f"{student.user.last_name}"
+                    ),
+                    'email': student.user.email,
+                    'enrollment_id': enrollment.id,
+                    'statistics': {
+                        'total_sessions': total_slots,
+                        'present': present_count,
+                        'absent': absent_count,
+                        'pending': pending_count,
+                        'late': late_count,
+                        'attendance_rate': round(
+                            (present_count / total_slots * 100)
+                            if total_slots > 0 else 0,
+                            2
+                        )
+                    },
+                    'attendance_records': attendance_records
+                })
+
+            return ResponseFormat.response(
+                data={
+                    'course_id': course.id,
+                    'course_name': (
+                        course.subject.name if course.subject else None
+                    ),
+                    'teacher_name': (
+                        f"{course.teacher.user.first_name} "
+                        f"{course.teacher.user.last_name}"
+                        if course.teacher and course.teacher.user
+                        else None
+                    ),
+                    'total_students': len(students_data),
+                    'total_sessions': len(time_slots),
+                    'students': students_data
+                },
+                case_name="SUCCESS"
+            )
+
+        except LopTinChi.DoesNotExist:
+            return ResponseFormat.response(
+                data={'message': 'Lớp tín chỉ không tồn tại'},
+                case_name="NOT_FOUND"
+            )
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return ResponseFormat.response(
+                data={
+                    'message': f'Lỗi khi lấy danh sách điểm danh: {str(e)}'
+                },
+                case_name="SERVER_ERROR"
             )
