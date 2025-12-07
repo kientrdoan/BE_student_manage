@@ -5,3 +5,6 @@ class SharedConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'apps.my_built_in'
     label = "my_built_in"
+
+    def ready(self):
+        import apps.my_built_in.signals  # noqa

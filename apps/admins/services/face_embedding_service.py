@@ -286,14 +286,14 @@ class FaceEmbeddingService:
             }
 
     @classmethod
-    def match_faces_batch(cls, detected_vectors, stored_vectors_dict, threshold=0.8):
+    def match_faces_batch(cls, detected_vectors, stored_vectors_dict, threshold=0.95):
         """
         So sánh nhiều vector phát hiện với danh sách vector đã lưu.
 
         Args:
             detected_vectors (list): List các vector phát hiện được (dạng list)
             stored_vectors_dict (dict): Dict {student_id: vector_str}
-            threshold (float): Ngưỡng khoảng cách
+            threshold (float): Ngưỡng khoảng cách Euclidean (default=0.95)
 
         Returns:
             dict: {
@@ -301,8 +301,7 @@ class FaceEmbeddingService:
                     {
                         'detected_index': int,
                         'student_id': int,
-                        'distance': float,
-                        'similarity': float
+                        'distance': float
                     }
                 ],
                 'unmatched_indices': list of int
@@ -324,13 +323,12 @@ class FaceEmbeddingService:
             # Convert stored vectors sang tensor
             student_ids = []
             stored_tensors_list = []
-
+            
             for student_id, vector_str in stored_vectors_dict.items():
                 vector = cls.string_to_vector(vector_str)
                 if vector is not None:
                     student_ids.append(student_id)
                     stored_tensors_list.append(vector)
-
             if not stored_tensors_list:
                 return {
                     'matches': [],
@@ -345,10 +343,10 @@ class FaceEmbeddingService:
             # Tính ma trận khoảng cách Euclidean
             # Shape: (n_detected, n_students)
             distances = torch.cdist(detected_tensors, stored_tensors, p=2)
-
+            
             # Tìm student gần nhất cho mỗi khuôn mặt phát hiện
             min_distances, min_indices = torch.min(distances, dim=1)
-            print("distances",distances)
+            
             # Lọc ra các match thỏa mãn threshold
             matches = []
             matched_detected_indices = set()
@@ -365,8 +363,7 @@ class FaceEmbeddingService:
                         matches.append({
                             'detected_index': detected_idx,
                             'student_id': student_id,
-                            'distance': float(min_dist),
-                            'similarity': max(0.0, 1.0 - float(min_dist))
+                            'distance': float(min_dist)
                         })
                         matched_detected_indices.add(detected_idx)
                         matched_student_ids.add(student_id)
@@ -417,7 +414,11 @@ class FaceEmbeddingService:
         """
         if not vector_str:
             return None
-        return json.loads(vector_str)
+        try:
+            return json.loads(vector_str)
+        except (json.JSONDecodeError, TypeError) as e:
+            print(f"Error parsing vector_str: {e}, value: {vector_str[:100] if vector_str else 'None'}")
+            return None
 
     @classmethod
     def compare_faces(cls, vector1_str, vector2_str, threshold=0.85):

@@ -79,7 +79,10 @@ urlpatterns += [
 from apps.admins.views.attendance import (
     AttendanceWithValidationView,
     AttendanceDetailView,
-    AttendanceStatisticsView
+    AttendanceStatisticsView,
+    PendingAttendanceImagesView,
+    ConfirmAttendanceView,
+    CourseAttendanceListView
 )
 
 urlpatterns += [
@@ -91,4 +94,13 @@ urlpatterns += [
 
     # Thống kê điểm danh
     path('attendance/statistics/', AttendanceStatisticsView.as_view(), name='attendance-statistics'),
+    
+    # Lấy danh sách ảnh có sinh viên Pending (cho giáo viên)
+    path('attendance/pending-images/', PendingAttendanceImagesView.as_view(), name='pending-attendance-images'),
+    
+    # Xác nhận/từ chối sinh viên Pending
+    path('attendance/confirm/', ConfirmAttendanceView.as_view(), name='confirm-attendance'),
+    
+    # Lấy toàn bộ danh sách điểm danh của lớp tín chỉ
+    path('attendance/course/', CourseAttendanceListView.as_view(), name='course-attendance-list'),
 ]

@@ -6,11 +6,10 @@ from apps.teachers.views.semester import SemesterView, CurrentSemesterView
 from apps.teachers.views.score import SinhVienMonHocView, ScoreUpdateView
 from apps.teachers.views.attend import AttendView, AttendCreateView
 from apps.teachers.views.lesson import LessonListView
-from apps.teachers.views.attendance_confirmation import (
-    UnconfirmedAttendanceListView,
-    AttendanceEvidenceView,
-    AttendanceConfirmationView,
-    StudentAttendanceImageView
+from apps.teachers.views.pending_attendance import (
+    TeacherPendingAttendanceListView,
+    TeacherPendingImagesView,
+    TeacherApproveAttendanceView
 )
 
 urlpatterns = [
@@ -47,17 +46,14 @@ urlpatterns += [
     path('lessons/<int:course_id>', LessonListView.as_view())
 ]
 
-# Attendance Confirmation APIs for Teachers
+# Attendance APIs - NEW FLOW
 urlpatterns += [
-    # Danh sách buổi học chưa xác nhận điểm danh
-    path('attendance/unconfirmed', UnconfirmedAttendanceListView.as_view(), name='unconfirmed_attendance_list'),
+    # Danh sách buổi học có sinh viên Pending (chờ duyệt)
+    path('attendance/pending/time-slots/', TeacherPendingAttendanceListView.as_view(), name='pending_time_slots'),
     
-    # Xem bằng chứng điểm danh (ảnh sinh viên) của một buổi học
-    path('attendance/evidence/<int:time_slot_id>', AttendanceEvidenceView.as_view(), name='attendance_evidence'),
+    # Xem danh sách ảnh unique và sinh viên Pending trong buổi học
+    path('attendance/pending/images/<int:time_slot_id>/', TeacherPendingImagesView.as_view(), name='pending_images'),
     
-    # Xác nhận hoặc hủy xác nhận điểm danh
-    path('attendance/confirm/<int:time_slot_id>', AttendanceConfirmationView.as_view(), name='attendance_confirm'),
-    
-    # Xem ảnh điểm danh của một sinh viên cụ thể
-    path('attendance/image/<int:attendance_id>', StudentAttendanceImageView.as_view(), name='student_attendance_image'),
+    # Approve/Reject sinh viên Pending → Present/Absent
+    path('attendance/pending/approve/', TeacherApproveAttendanceView.as_view(), name='approve_attendance'),
 ]
