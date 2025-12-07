@@ -79,7 +79,8 @@ urlpatterns += [
 from apps.admins.views.attendance import (
     AttendanceWithValidationView,
     AttendanceDetailView,
-    AttendanceStatisticsView
+    AttendanceStatisticsView,
+    AttendanceRequestView
 )
 
 urlpatterns += [
@@ -91,4 +92,9 @@ urlpatterns += [
 
     # Thống kê điểm danh
     path('attendance/statistics/', AttendanceStatisticsView.as_view(), name='attendance-statistics'),
+]
+
+urlpatterns += [
+    # Điểm danh bằng khuôn mặt và lấy danh sách điểm danh
+    path('attendance/request', AttendanceRequestView.as_view(), name='attendance'),
 ]

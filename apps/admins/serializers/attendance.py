@@ -5,6 +5,26 @@ from apps.my_built_in.models.dang_ky import DangKy
 from apps.my_built_in.models.sinh_vien import SinhVien
 
 
+class AttendanceRequestCreateSerializer(serializers.Serializer):
+    """
+    Serializer để tạo điểm danh từ ảnh có nhiều khuôn mặt
+    """
+    time_slot_id = serializers.IntegerField(required=True, help_text="ID của buổi học")
+    image = serializers.ImageField(required=True, help_text="Ảnh chứa nhiều khuôn mặt sinh viên")
+    student_id = serializers.IntegerField()
+    course_id = serializers.IntegerField()
+    
+    # url_checkin = serializers.ImageField(required=False)
+    
+    def validate_time_slot_id(self, value):
+        """Kiểm tra buổi học có tồn tại không"""
+        try:
+            BuoiHoc.objects.get(id=value)
+        except BuoiHoc.DoesNotExist:
+            raise serializers.ValidationError("Buổi học không tồn tại")
+        return value
+
+
 class AttendanceCreateSerializer(serializers.Serializer):
     """
     Serializer để tạo điểm danh từ ảnh có nhiều khuôn mặt

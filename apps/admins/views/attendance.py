@@ -18,7 +18,8 @@ from apps.admins.serializers.attendance import (
     AttendanceDetailSerializer,
     AttendanceResultSerializer,
     AttendanceListSerializer,
-    AttendanceUpdateSerializer
+    AttendanceUpdateSerializer,
+    AttendanceRequestCreateSerializer
 )
 
 from apps.admins.services.face_embedding_service import FaceEmbeddingService
@@ -31,7 +32,7 @@ class AttendanceRequestView(APIView):
     parser_classes = [MultiPartParser, FormParser]
 
     def post(self, request):
-        serializer = AttendanceCreateSerializer(data=request.data)
+        serializer = AttendanceRequestCreateSerializer(data=request.data)
         if not serializer.is_valid():
             return ResponseFormat.response(
                 data=serializer.errors,
@@ -41,7 +42,8 @@ class AttendanceRequestView(APIView):
         validated_data = serializer.validated_data
         time_slot_id = validated_data['time_slot_id']
         image_file = validated_data['image']
-        threshold = validated_data.get('threshold', 0.8)
+        student_id = validated_data.get('student_id')
+        course_id = validated_data.get("course_id")
 
         fs = FileSystemStorage(
             location=os.path.join(settings.MEDIA_ROOT, 'checkin'),
@@ -51,46 +53,36 @@ class AttendanceRequestView(APIView):
         image_file.seek(0)
 
         try:
-            # Lấy thông tin buổi học
-            time_slot = BuoiHoc.objects.select_related(
-                'course__subject',
-                'course__class_st',
-                'course__room'
-            ).get(id=time_slot_id)
-            course = time_slot.course
+            print(student_id, course_id)
+            enroll = DangKy.objects.filter(student__user__id = student_id, course_id= course_id, is_deleted = False).first()
+            time_slot = BuoiHoc.objects.filter(id = time_slot_id).first()
 
-
-            image_file.seek(0)
-
-            # ==================== GET STUDENTS ====================
-            # Lấy danh sách sinh viên đã đăng ký lớp
-            enrollments = DangKy.objects.filter(
-                course=course,
+            existing_attendance = ThamDu.objects.filter(
+                enrollment_id=enroll.id,
+                time_slot_id= time_slot_id,
                 is_deleted=False
-            ).select_related('student', 'student__user')
+            ).first()
 
-            if not enrollments.exists():
-                return ResponseFormat.response(
-                    data={'message': 'Không có sinh viên nào đăng ký lớp này'},
-                    case_name="INVALID_INPUT"
-                )
-
-            return ResponseFormat.response(
-                data=None,
-                case_name="SUCCESS"
+            if existing_attendance:
+                existing_attendance.status = 'Pending'
+                existing_attendance.url_checkin = image_file
+                existing_attendance.save()
+            else:
+                ThamDu.objects.create(
+                enrollment_id= enroll.id,
+                time_slot= time_slot,
+                status='Pending',
+                url_checkin=image_file
             )
+        
+            return ResponseFormat.response(data=None, case_name="SUCCESS")
 
-        except BuoiHoc.DoesNotExist:
-            return ResponseFormat.response(
-                data={'message': 'Buổi học không tồn tại'},
-                case_name="NOT_FOUND"
-            )
         except Exception as e:
             import traceback
             traceback.print_exc()
             return ResponseFormat.response(
                 data={'message': f'Lỗi khi điểm danh: {str(e)}'},
-                case_name="SERVER_ERROR"
+                case_name="ERROR"
             )
 
 
@@ -288,7 +280,7 @@ class AttendanceWithValidationView(APIView):
                     ).first()
 
                     if existing_attendance:
-                        existing_attendance.status = 'Pending',
+                        existing_attendance.status = 'Present'
                         existing_attendance.url_checkin = image_file
                         existing_attendance.save()
                         attendance_record = existing_attendance
@@ -296,7 +288,7 @@ class AttendanceWithValidationView(APIView):
                         attendance_record = ThamDu.objects.create(
                             enrollment_id=info['enrollment_id'],
                             time_slot=time_slot,
-                            status='Pending',
+                            status='Present',
                             url_checkin=image_file
                         )
 
