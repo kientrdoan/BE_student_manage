@@ -755,6 +755,92 @@ class ConfirmAttendanceView(APIView):
             )
 
 
+class StudentsByImageView(APIView):
+    """
+    API để lấy danh sách sinh viên theo URL ảnh điểm danh
+    """
+    
+    def get(self, request):
+        """
+        Lấy danh sách sinh viên có cùng URL ảnh điểm danh
+        
+        Query params:
+        - image_url: URL của ảnh điểm danh (bắt buộc)
+        """
+        image_url = request.query_params.get('image_url')
+        
+        if not image_url:
+            return ResponseFormat.response(
+                data={'message': 'Thiếu tham số image_url'},
+                case_name="INVALID_INPUT"
+            )
+        
+        try:
+            # Lấy tất cả bản ghi điểm danh có cùng URL ảnh
+            attendances = ThamDu.objects.filter(
+                attendance_image=image_url,
+                is_deleted=False
+            ).select_related(
+                'enrollment__student__user',
+                'time_slot__course__subject'
+            ).order_by('enrollment__student__student_code')
+            
+            if not attendances.exists():
+                return ResponseFormat.response(
+                    data={
+                        'message': 'Không tìm thấy sinh viên nào với URL ảnh này'
+                    },
+                    case_name="NOT_FOUND"
+                )
+            
+            # Lấy thông tin buổi học (từ bản ghi đầu tiên)
+            first_attendance = attendances.first()
+            time_slot = first_attendance.time_slot
+            
+            # Tạo danh sách sinh viên
+            students_data = []
+            for attendance in attendances:
+                student = attendance.enrollment.student
+                students_data.append({
+                    'attendance_id': attendance.id,
+                    'student_id': student.id,
+                    'student_code': student.student_code,
+                    'full_name': (
+                        f"{student.user.first_name} "
+                        f"{student.user.last_name}"
+                    ),
+                    'email': student.user.email,
+                    'status': attendance.status,
+                    'enrollment_id': attendance.enrollment_id
+                })
+            
+            return ResponseFormat.response(
+                data={
+                    'image_url': image_url,
+                    'time_slot_id': time_slot.id,
+                    'date': str(time_slot.date),
+                    'course_name': (
+                        time_slot.course.subject.name
+                        if time_slot.course and time_slot.course.subject
+                        else None
+                    ),
+                    'total_students': len(students_data),
+                    'students': students_data
+                },
+                case_name="SUCCESS"
+            )
+            
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return ResponseFormat.response(
+                data={
+                    'message': f'Lỗi khi lấy danh sách sinh viên: {str(e)}'
+                },
+                case_name="SERVER_ERROR"
+            )
+
+
 class CourseAttendanceListView(APIView):
     """
     API để lấy toàn bộ danh sách điểm danh của sinh viên trong 1 lớp tín chỉ
