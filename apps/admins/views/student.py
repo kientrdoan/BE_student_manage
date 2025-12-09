@@ -16,7 +16,17 @@ class StudentView(APIView):
 
     def get(self, request):
         """Lấy danh sách sinh viên"""
-        students = Student.objects.filter(is_deleted=False)
+        is_deleted = request.GET.get("is_deleted", None)
+        class_id = request.GET.get("class_id", None)
+        print(is_deleted, class_id)
+        if is_deleted is not None :
+            students = Student.objects.filter(is_deleted= is_deleted)
+            if class_id is not None:
+                students = Student.objects.filter(is_deleted= is_deleted, class_student_id= class_id)
+        else:
+            students = Student.objects.all()
+            if class_id is not None:
+                students = Student.objects.filter(class_student_id= class_id)
         serializer = StudentDetailSerializer(students, many=True)
         return ResponseFormat.response(data=serializer.data, case_name="SUCCESS")
 

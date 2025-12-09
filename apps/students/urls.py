@@ -16,16 +16,16 @@ urlpatterns = [
 ]
 
 urlpatterns += [
-    path('semesters/', SemesterView.as_view()),
-    path('current-semesters/', CurrentSemesterView.as_view()),
-    path('classes/', ClassView.as_view()),
+    path('semesters', SemesterView.as_view()),
+    path('current-semesters', CurrentSemesterView.as_view()),
+    path('classes', ClassView.as_view()),
     
     path('profile/<int:id>', StudentView.as_view(), name='student-profile'),
-    path('courses/<int:class_id>/<semester_id>/', CourseView.as_view(), name='course-detail'),
-    path('courses/<int:course_id>/', CourseDetailView.as_view(), name='course-detail'),
-    path('enrollments/<int:user_id>/<int:semester_id>/', EnrollmentView.as_view(), name='enrollment-detail'),
-    path('create-enrollments/<int:user_id>/<int:course_id>/', EnrollmentCreateView.as_view(), name='enrollment-create'),
-    path('delete-enrollments/<int:user_id>/<int:register_id>/', EnrollmentDeleteView.as_view(), name='enrollment-delete'),
+    path('courses/<int:class_id>/<semester_id>', CourseView.as_view(), name='course-detail'),
+    path('courses/<int:course_id>', CourseDetailView.as_view(), name='course-detail'),
+    path('enrollments/<int:user_id>/<int:semester_id>', EnrollmentView.as_view(), name='enrollment-detail'),
+    path('create-enrollments/<int:user_id>/<int:course_id>', EnrollmentCreateView.as_view(), name='enrollment-create'),
+    path('delete-enrollments/<int:user_id>/<int:register_id>', EnrollmentDeleteView.as_view(), name='enrollment-delete'),
 ]
 
 urlpatterns += [

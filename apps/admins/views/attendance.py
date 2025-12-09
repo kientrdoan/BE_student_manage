@@ -70,40 +70,40 @@ class AttendanceWithValidationView(APIView):
             
             # ========== VALIDATE IMAGE TIMESTAMP ==========
             # Kiểm tra thời gian chụp ảnh có hợp lệ không
-            timestamp_validation = (
-                ImageMetadataService.validate_image_timestamp(
-                    image_file=image_file,
-                    lesson_date=time_slot.date,
-                    start_period=course.start_period,
-                    tolerance_minutes=30  # Cho phép chụp trước/sau 30 phút
-                )
-            )
+            # timestamp_validation = (
+            #     ImageMetadataService.validate_image_timestamp(
+            #         image_file=image_file,
+            #         lesson_date=time_slot.date,
+            #         start_period=course.start_period,
+            #         tolerance_minutes=30  # Cho phép chụp trước/sau 30 phút
+            #     )
+            # )
             
-            if not timestamp_validation['is_valid']:
-                return ResponseFormat.response(
-                    data={
-                        'message': timestamp_validation['message'],
-                        'details': {
-                            'expected_date': str(
-                                timestamp_validation['expected_date']
-                            ),
-                            'expected_time_range': (
-                                str(timestamp_validation['expected_time_range'][0])
-                                if timestamp_validation['expected_time_range']
-                                else None,
-                                str(timestamp_validation['expected_time_range'][1])
-                                if timestamp_validation['expected_time_range']
-                                else None
-                            ) if timestamp_validation['expected_time_range'] else None,
-                            'photo_datetime': (
-                                str(timestamp_validation['photo_datetime'])
-                                if timestamp_validation['photo_datetime']
-                                else None
-                            )
-                        }
-                    },
-                    case_name="INVALID_INPUT"
-                )
+            # if not timestamp_validation['is_valid']:
+            #     return ResponseFormat.response(
+            #         data={
+            #             'message': timestamp_validation['message'],
+            #             'details': {
+            #                 'expected_date': str(
+            #                     timestamp_validation['expected_date']
+            #                 ),
+            #                 'expected_time_range': (
+            #                     str(timestamp_validation['expected_time_range'][0])
+            #                     if timestamp_validation['expected_time_range']
+            #                     else None,
+            #                     str(timestamp_validation['expected_time_range'][1])
+            #                     if timestamp_validation['expected_time_range']
+            #                     else None
+            #                 ) if timestamp_validation['expected_time_range'] else None,
+            #                 'photo_datetime': (
+            #                     str(timestamp_validation['photo_datetime'])
+            #                     if timestamp_validation['photo_datetime']
+            #                     else None
+            #                 )
+            #             }
+            #         },
+            #         case_name="INVALID_INPUT"
+            #     )
             
             # Reset file pointer
             image_file.seek(0)

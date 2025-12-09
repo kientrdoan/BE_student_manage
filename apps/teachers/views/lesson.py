@@ -10,7 +10,7 @@ from apps.my_built_in.response import ResponseFormat
 
 class LessonListView(APIView):
     def get(self, request, course_id):
-        lessons = BuoiHoc.objects.filter(course__id = course_id)
+        lessons = BuoiHoc.objects.filter(course__id = course_id).select_related().order_by('-date')
         serializer = LessonListSerializer(lessons, many = True)
 
         return ResponseFormat.response(serializer.data, case_name="SUCCESS")
