@@ -47,10 +47,12 @@ class AttendCreateView(APIView):
     
 class AttendMultiCreateView(APIView):
     def post(self, request):
-        student_ids = request.data.get("student_ids", [])
+        student_ids = request.data.get("student_id", [])
         course_id = request.data.get("course_id")
         time_slot_id = request.data.get("time_slot_id")
         status = request.data.get("status")
+
+        print(student_ids, course_id, time_slot_id, status)
 
         try:
             with transaction.atomic():
