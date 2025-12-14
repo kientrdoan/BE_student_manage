@@ -8,9 +8,20 @@ class CourseSerializer(serializers.ModelSerializer):
     teacher = serializers.SerializerMethodField()
     class_st = serializers.SerializerMethodField()
     room = serializers.SerializerMethodField()
+    buoi_hoc = serializers.SerializerMethodField()
+
+    def get_buoi_hoc(self, obj):
+        return [
+            {
+                "id": bh.id,
+                "date": bh.date
+            }
+            for bh in obj.buoi_hoc.all()
+        ]
+
     class Meta:
         model = Course
-        fields = ['id', 'semester', 'subject', 'teacher', 'class_st', 'room', 'max_capacity', 'start_date', 'end_date', 'weekday', 'start_period', 'updated_at', 'created_at', 'is_deleted']
+        fields = ['id', 'semester', 'subject', 'teacher', 'class_st', 'room', 'max_capacity', 'buoi_hoc', 'start_date', 'end_date', 'weekday', 'start_period', 'updated_at', 'created_at', 'is_deleted']
         read_only_fields = ['id', 'updated_at', 'created_at']
 
     def get_semester(self, obj):
@@ -63,6 +74,7 @@ class CourseSerializer(serializers.ModelSerializer):
                 "room_code": room.room_code,
             }
         return None
+
     
 class CourseCreateSerializer(serializers.ModelSerializer):
     class Meta:

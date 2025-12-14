@@ -10,6 +10,7 @@ from apps.admins.views.semester import SemesterView, SemesterDetailView, Current
 from apps.admins.views.course import CourseView, CourseDetailView, CourseCreateView
 from apps.admins.views.subject import SubjectView, SubjectDetailView, SubjectListByMajorView
 from apps.admins.views.room import RoomView, RoomDetailView
+from apps.admins.views.time_slot import TimeSlotView
 
 
 # Department
@@ -74,6 +75,11 @@ urlpatterns += [
     path('schedule/', ScheduleView.as_view()),
     path('schedule/status/<int:semester_id>/', ScheduleStatusView.as_view()),
     path('schedule/reset/<int:semester_id>/', ScheduleResetView.as_view()),
+]
+
+
+urlpatterns += [
+    path('time-slot/<int:course_id>', TimeSlotView.as_view()),
 ]
 
 from apps.admins.views.attendance import (

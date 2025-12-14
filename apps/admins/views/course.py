@@ -15,7 +15,9 @@ class CourseView(APIView):
     def get(self, request, semester_id=None):
         is_deleted = request.GET.get("is_deleted", None)
         if is_deleted is not None:
-            courses = Course.objects.filter(semester__id = semester_id, is_deleted = is_deleted)
+            courses = Course.objects.filter(semester__id = semester_id, is_deleted = is_deleted).prefetch_related(
+                'buoi_hoc'
+            )
         else:
             courses = Course.objects.filter(semester__id = semester_id)
         serializer = CourseSerializer(courses, many=True)
