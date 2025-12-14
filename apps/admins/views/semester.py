@@ -1,5 +1,7 @@
 from datetime import date
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from apps.my_built_in.models.hoc_ky import HocKy as Semester
 
@@ -8,6 +10,8 @@ from apps.admins.serializers.semester import SemesterSerializer, SemesterCreateS
 from apps.my_built_in.response import ResponseFormat
 
 class SemesterView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         is_deleted = request.GET.get("is_deleted")
         if is_deleted is not None:
@@ -32,6 +36,8 @@ class SemesterView(APIView):
         return ResponseFormat.response(data=serializer.errors, case_name="ERROR", status=400)
     
 class SemesterDetailView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     def get_object(self, pk):
         try:
             return Semester.objects.get(pk=pk)
@@ -64,6 +70,8 @@ class SemesterDetailView(APIView):
         return ResponseFormat.response(case_name="SUCCESS")
     
 class CurrentSemesterView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         today = date.today()
         semester = Semester.objects.filter(

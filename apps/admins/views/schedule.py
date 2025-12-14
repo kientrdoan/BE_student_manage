@@ -1,4 +1,8 @@
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.authentication import JWTAuthentication
+
+
 from rest_framework.parsers import MultiPartParser, FormParser
 import openpyxl
 from dataclasses import dataclass
@@ -34,6 +38,8 @@ class ScheduleView(APIView):
     API xếp lịch học tự động bằng Genetic Algorithm
     """
     parser_classes = (MultiPartParser, FormParser)
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
         """
@@ -330,6 +336,8 @@ class ScheduleStatusView(APIView):
     """
     API kiểm tra trạng thái xếp lịch của học kỳ
     """
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request, semester_id):
         """
@@ -386,6 +394,8 @@ class ScheduleResetView(APIView):
     """
     API xóa lịch học đã xếp
     """
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
 
     def post(self, request, semester_id):
         """

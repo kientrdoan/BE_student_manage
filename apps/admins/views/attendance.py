@@ -1,4 +1,7 @@
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.authentication import JWTAuthentication
+
 from rest_framework.parsers import MultiPartParser, FormParser
 from django.db import transaction
 from apps.my_built_in.models.tham_du import ThamDu
@@ -39,6 +42,8 @@ class AttendanceWithValidationView(APIView):
     7. Trả ảnh đã xử lý về client
     """
     parser_classes = [MultiPartParser, FormParser]
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
         """
@@ -448,6 +453,9 @@ class AttendanceDetailView(APIView):
     API để xem chi tiết và cập nhật điểm danh
     """
 
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
     def get(self, request, pk):
         """Lấy chi tiết 1 bản ghi điểm danh"""
         try:
@@ -519,6 +527,8 @@ class AttendanceDetailView(APIView):
 
 class AttendanceStatisticsView(APIView):
     """API để xem thống kê điểm danh của buổi học"""
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         """Lấy thống kê điểm danh theo time_slot_id"""
@@ -585,6 +595,8 @@ class PendingAttendanceImagesView(APIView):
     API để giáo viên xem danh sách ảnh có sinh viên Pending
     Trả về các ảnh unique và danh sách sinh viên trong mỗi ảnh
     """
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     
     def get(self, request):
         """
@@ -686,6 +698,8 @@ class ConfirmAttendanceView(APIView):
     """
     API để giáo viên xác nhận hoặc từ chối sinh viên Pending
     """
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     
     def post(self, request):
         """
@@ -759,6 +773,8 @@ class StudentsByImageView(APIView):
     """
     API để lấy danh sách sinh viên theo URL ảnh điểm danh
     """
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     
     def get(self, request):
         """
@@ -845,6 +861,8 @@ class CourseAttendanceListView(APIView):
     """
     API để lấy toàn bộ danh sách điểm danh của sinh viên trong 1 lớp tín chỉ
     """
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         """

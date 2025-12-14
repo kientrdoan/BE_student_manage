@@ -1,4 +1,6 @@
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 # model
 from apps.my_built_in.models.lop_sinh_vien import LopSinhVien as Class
@@ -9,6 +11,8 @@ from apps.admins.serializers.classes import ClassDetailSerializer, ClassListSeri
 from apps.my_built_in.response import ResponseFormat
 
 class ClassView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         is_deleted = request.GET.get("is_deleted")
         if is_deleted is not None:
@@ -30,6 +34,8 @@ class ClassView(APIView):
         return ResponseFormat.response(data=serializer.errors, case_name="INVALID_INPUT", status=400)
     
 class ClassDetailView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     def get(self, request, pk):
         try:
             class_instance = Class.objects.get(pk=pk)

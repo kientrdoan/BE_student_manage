@@ -6,7 +6,7 @@ class PhongHoc(models.Model):
     max_capacity = models.IntegerField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    is_active = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
 
     class Meta:
         db_table = "phong_hoc"

@@ -1,4 +1,6 @@
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from apps.my_built_in.models.buoi_hoc import BuoiHoc
 
@@ -7,6 +9,9 @@ from apps.admins.serializers.time_slot import TimeSlotSerializer
 from apps.my_built_in.response import ResponseFormat
 
 class TimeSlotView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    
     def get(self, request, course_id=None):
         buoi_hoc = BuoiHoc.objects.filter(course_id = course_id).order_by("-date")
         serializer = TimeSlotSerializer(buoi_hoc, many=True)

@@ -1,4 +1,6 @@
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 # model
 from apps.my_built_in.models.nganh import Nganh as Major
@@ -9,6 +11,8 @@ from apps.admins.serializers.major import MajorDetailSerializer, MajorListSerial
 from apps.my_built_in.response import ResponseFormat
 
 class MajorView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         is_deleted = request.GET.get("is_deleted", None)
         if is_deleted is not None:
@@ -30,6 +34,8 @@ class MajorView(APIView):
         return ResponseFormat.response(data=serializer.errors, case_name="INVALID_INPUT", status=400)
     
 class MajorDetailView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     def get(self, request, pk):
         try:
             major = Major.objects.get(pk=pk)

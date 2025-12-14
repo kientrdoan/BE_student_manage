@@ -1,4 +1,6 @@
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 # model
 from apps.my_built_in.models.sinh_vien import SinhVien as Student
@@ -12,6 +14,8 @@ from rest_framework.parsers import MultiPartParser, FormParser
 
 
 class StudentView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
 
     def get(self, request):
@@ -75,8 +79,9 @@ class StudentView(APIView):
         )
     
 
-    
 class StudentDetailView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     def get(self, request, pk):
         try:
             student = Student.objects.get(id=pk)

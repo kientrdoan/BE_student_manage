@@ -1,4 +1,6 @@
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 # model
 from apps.my_built_in.models.giao_vien import GiaoVien as Teacher
@@ -9,6 +11,8 @@ from apps.admins.serializers.teacher import TeacherDetailSerializer, TeacherCrea
 from apps.my_built_in.response import ResponseFormat
 
 class TeacherView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         is_deleted = request.GET.get("is_deleted", None)
         if is_deleted is not None:
@@ -34,6 +38,8 @@ class TeacherView(APIView):
     
 
 class TeacherDetailView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     def get(self, request, pk):
         try:
             student = Teacher.objects.get(id=pk)
@@ -72,6 +78,8 @@ class TeacherDetailView(APIView):
     
 
 class TeacherByDepartmentView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     def get(self, reqeust, department_id):
         teachers = Teacher.objects.filter(department__id = department_id)
         serializer = TeacherDetailSerializer(teachers, many= True)

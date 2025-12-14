@@ -1,4 +1,6 @@
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from apps.my_built_in.models.phong_hoc import PhongHoc
 
@@ -7,6 +9,8 @@ from apps.admins.serializers.room import RoomSerializer, RoomCreateSerializer, R
 from apps.my_built_in.response import ResponseFormat
 
 class RoomView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         is_active = request.GET.get("is_active", None)
         if is_active is not None:
@@ -31,6 +35,8 @@ class RoomView(APIView):
         return ResponseFormat.response(data=serializer.error_messages, case_name="ERROR", status=400)
     
 class RoomDetailView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     def get(self, request, pk):
         try:
             room = PhongHoc.objects.get(pk=pk)

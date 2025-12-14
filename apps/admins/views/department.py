@@ -1,4 +1,6 @@
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 # model
 from apps.my_built_in.models.khoa import Khoa as Department
@@ -10,6 +12,10 @@ from django.db.models import Q
 from apps.my_built_in.response import ResponseFormat
 
 class DepartmentView(APIView):
+
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
     def get(self, request):
         is_deleted = request.GET.get("is_deleted", None)
         if is_deleted is not None:
@@ -32,6 +38,8 @@ class DepartmentView(APIView):
 
     
 class DepartmentDetailView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     def get(self, request, pk):
         try:
             department = Department.objects.get(pk=pk)

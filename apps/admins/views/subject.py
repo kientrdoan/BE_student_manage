@@ -1,4 +1,7 @@
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.authentication import JWTAuthentication
+
 from django.db.models import Q
 
 from apps.my_built_in.models.mon_hoc import MonHoc as Subject
@@ -10,6 +13,8 @@ from apps.my_built_in.response import ResponseFormat
 
 
 class SubjectView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         is_deleted = request.GET.get("is_deleted", None)
         if is_deleted is not None:
@@ -34,6 +39,8 @@ class SubjectView(APIView):
         return ResponseFormat.response(data=serializer.error_messages, case_name="ERROR", status=400)
     
 class SubjectDetailView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     def get(self, request, pk):
         try:
             subject = Subject.objects.get(pk=pk)
@@ -63,6 +70,8 @@ class SubjectDetailView(APIView):
             return ResponseFormat.response(data=None, case_name="NOT_FOUND", status=404)
         
 class SubjectListByMajorView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     def get(self, request, major_id):
         subjects = Subject.objects.filter(major__id = major_id, is_deleted = False)
         serializer = SubjectSerializer(subjects, many= True)
