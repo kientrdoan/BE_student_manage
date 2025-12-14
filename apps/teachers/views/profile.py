@@ -20,7 +20,7 @@ class TeacherProfile(APIView):
     
     def put(self, request, pk):
         try:
-            teacher = Teacher.objects.get(pk=pk)
+            teacher = Teacher.objects.get(user_id=pk)
         except Teacher.DoesNotExist:
             return ResponseFormat.response(data=None, case_name="NOT_FOUND")
         

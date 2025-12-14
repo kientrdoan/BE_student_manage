@@ -33,7 +33,7 @@ urlpatterns += [
 
 urlpatterns += [
     path('scores/<int:course_id>', SinhVienMonHocView.as_view()),
-    path('scores/<int:dang_ky_id>/', ScoreUpdateView.as_view()),
+    path('score/<int:dang_ky_id>', ScoreUpdateView.as_view()),
 ]
 
 urlpatterns += [

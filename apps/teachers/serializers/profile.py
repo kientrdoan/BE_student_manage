@@ -41,7 +41,7 @@ class TeacherUpdateSerializer(serializers.ModelSerializer):
     user = UserUpdateSerializer()
     class Meta:
         model = GiaoVien
-        fields = ["teacher_code", "degree", "title", "department", "user", "start_date", "end_date", "is_deleted"]
+        fields = ["teacher_code", "degree", "title", "department", "user"]
     
     def update(self, instance, validated_data):
         user_data = validated_data.pop("user", None)
