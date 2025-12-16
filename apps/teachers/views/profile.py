@@ -1,4 +1,6 @@
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from apps.my_built_in.models.giao_vien import GiaoVien
 
@@ -8,6 +10,8 @@ from apps.my_built_in.models.giao_vien import GiaoVien as Teacher
 from apps.my_built_in.response import ResponseFormat
 
 class TeacherProfile(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     def get(self, request, pk):
         try:
             print(pk)

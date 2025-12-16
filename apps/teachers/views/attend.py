@@ -1,4 +1,7 @@
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.authentication import JWTAuthentication
+
 from apps.my_built_in.models.sinh_vien import SinhVien
 from apps.my_built_in.models.tham_du import ThamDu
 from apps.my_built_in.models.buoi_hoc import BuoiHoc
@@ -10,6 +13,8 @@ from apps.teachers.serializers.attend import AttendSerializer, AttendCreateSeria
 from apps.my_built_in.response import ResponseFormat
 
 class AttendView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     def get(self, request, course_id):
         try:
             attends = SinhVien.objects.filter(course__id=course_id)
@@ -19,6 +24,8 @@ class AttendView(APIView):
         return ResponseFormat.response(data=serializer.data)
     
 class AttendCreateView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     def post(self, request):
         course_id = request.data.get("course_id")
         student_id = request.data.get("student_id")
@@ -46,6 +53,8 @@ class AttendCreateView(APIView):
         return ResponseFormat.response(data=None, case_name="SUCCESS")
     
 class AttendMultiCreateView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     def post(self, request):
         student_ids = request.data.get("student_id", [])
         course_id = request.data.get("course_id")

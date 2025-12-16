@@ -1,4 +1,7 @@
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.authentication import JWTAuthentication
+
 from django.db import transaction
 from apps.my_built_in.models.tham_du import ThamDu
 from apps.my_built_in.models.buoi_hoc import BuoiHoc
@@ -9,6 +12,9 @@ class TeacherPendingAttendanceListView(APIView):
     """
     API để giáo viên xem danh sách các buổi học có sinh viên Pending
     """
+
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         """
@@ -96,6 +102,9 @@ class TeacherPendingImagesView(APIView):
     API để giáo viên xem danh sách ảnh unique và sinh viên Pending
     trong một buổi học cụ thể
     """
+
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request, time_slot_id):
         """
@@ -189,6 +198,9 @@ class TeacherApproveAttendanceView(APIView):
     """
     API để giáo viên approve/reject sinh viên Pending
     """
+
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
         """

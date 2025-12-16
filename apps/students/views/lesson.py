@@ -1,5 +1,6 @@
 from rest_framework.views import APIView
-
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from apps.my_built_in.models.buoi_hoc import BuoiHoc
 
@@ -9,6 +10,9 @@ from apps.my_built_in.response import ResponseFormat
 
 
 class LessonListView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    
     def get(self, request, course_id):
         lessons = BuoiHoc.objects.filter(course__id = course_id)
         serializer = LessonListSerializer(lessons, many = True)

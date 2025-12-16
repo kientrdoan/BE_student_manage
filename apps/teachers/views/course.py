@@ -1,4 +1,6 @@
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from apps.my_built_in.models.lop_tin_chi import LopTinChi
 
@@ -7,6 +9,8 @@ from apps.teachers.serializers.course import CourseSerializer
 from apps.my_built_in.response import ResponseFormat
 
 class CourseByTeacherView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     def get(self, request, user_id= None):
         try:
             courses = courses = LopTinChi.objects.filter(teacher__user__id = user_id)
@@ -17,6 +21,8 @@ class CourseByTeacherView(APIView):
         return ResponseFormat.response(serializers.data)
     
 class CourseByTeacherAndSemesterView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     def get(self, request, user_id= None, semester_id = None):
         try:
             courses = LopTinChi.objects.filter(teacher__user__id = user_id, semester__id = semester_id)
@@ -26,6 +32,8 @@ class CourseByTeacherAndSemesterView(APIView):
             return ResponseFormat.response(data=None, case_name="NOT_FOUND")
 
 class CourseDetailView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     def get(self, request, course_id= None):
         try:
             courses = courses = LopTinChi.objects.get(id = course_id)

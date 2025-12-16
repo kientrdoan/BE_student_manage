@@ -1,6 +1,9 @@
 from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.authentication import JWTAuthentication
+
+
 from apps.my_built_in.response import ResponseFormat
 from apps.my_built_in.models import SinhVien, BuoiHoc, DangKy, ThamDu
 from django.core.files.storage import default_storage
@@ -23,6 +26,9 @@ class StudentUploadAttendanceImageView(APIView):
     """
     # permission_classes = [IsAuthenticated]  # Tạm tắt để test
     parser_classes = [MultiPartParser, FormParser]
+
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     
     def post(self, request):
         """

@@ -1,4 +1,6 @@
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from datetime import date
 
@@ -9,12 +11,16 @@ from apps.admins.serializers.semester import SemesterSerializer
 from apps.my_built_in.response import ResponseFormat
 
 class SemesterView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         semesters = Semester.objects.all().order_by('-start_date')
         serializer = SemesterSerializer(semesters, many=True)
         return ResponseFormat.response(data=serializer.data)
     
 class CurrentSemesterView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         today = date.today()
         semester = Semester.objects.filter(

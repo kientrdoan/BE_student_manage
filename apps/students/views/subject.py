@@ -1,4 +1,6 @@
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from apps.my_built_in.models.lop_sinh_vien import LopSinhVien
 from apps.my_built_in.models.mon_hoc import MonHoc as Subject
@@ -7,6 +9,8 @@ from apps.students.serializers.subject import SubjectDetailSerializer
 
 
 class SubjectView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     def get(self, request, user_id):
         try:
             lop_sv = LopSinhVien.objects.get(sinh_vien__user__id=user_id)

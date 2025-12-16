@@ -1,4 +1,6 @@
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from apps.my_built_in.models.sinh_vien import SinhVien
 from apps.my_built_in.response import ResponseFormat
@@ -6,6 +8,8 @@ from apps.students.serializers.student import StudentDetailSerializer, StudentUp
 
 
 class StudentView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     def get(self, request, id):
         try:
             print(id)

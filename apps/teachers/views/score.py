@@ -1,4 +1,7 @@
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.authentication import JWTAuthentication
+
 from apps.my_built_in.models.dang_ky import DangKy
 from apps.my_built_in.models.dang_ky import DangKy
 from apps.teachers.serializers.score import ScoreStudentSerializer
@@ -9,6 +12,8 @@ import pandas as pd
 from rest_framework.parsers import MultiPartParser
 
 class SinhVienMonHocView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     def get(self, request, course_id=None):
         try:
             students = DangKy.objects.filter(
@@ -43,7 +48,9 @@ class SinhVienMonHocView(APIView):
             print(e)
             return ResponseFormat.response(data=str(e), case_name="ERROR", status=500)
     
-class ScoreUpdateView(APIView):   
+class ScoreUpdateView(APIView): 
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     def put(self, request, dang_ky_id):
         try:
             score = request.data

@@ -1,4 +1,7 @@
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.authentication import JWTAuthentication
+
 from apps.my_built_in.models.sinh_vien import SinhVien
 from apps.my_built_in.models.tham_du import ThamDu
 from apps.my_built_in.models.buoi_hoc import BuoiHoc
@@ -66,6 +69,8 @@ from apps.my_built_in.response import ResponseFormat
 #         return ResponseFormat.response(data=data)
 
 class AttendView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     def get(self, request, student_id, course_id):
         try:
             attends = ThamDu.objects.filter(enrollment__student__user__id = student_id, enrollment__course__id=course_id)

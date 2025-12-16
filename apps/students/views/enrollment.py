@@ -1,4 +1,6 @@
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from apps.my_built_in.models.dang_ky import DangKy
 from apps.my_built_in.models.sinh_vien import SinhVien
@@ -8,6 +10,8 @@ from apps.students.serializers.enrollments import EnrollmentDetailSerializer, En
 
 # Lay danh sach LTC sinh vien da dang ky
 class EnrollmentView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     def get(self, request, user_id, semester_id):
         try:
             enrollments = DangKy.objects.filter(student__user__id=user_id, course__semester__id = semester_id, is_deleted = False)
@@ -16,7 +20,9 @@ class EnrollmentView(APIView):
         serializer = EnrollmentDetailSerializer(enrollments, many=True)
         return ResponseFormat.response(data=serializer.data)
     
-class EnrollmentCreateView(APIView):    
+class EnrollmentCreateView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     def post(self, request, user_id, course_id):
         try:
             sinh_vien = SinhVien.objects.get(user = user_id)
@@ -42,6 +48,8 @@ class EnrollmentCreateView(APIView):
         return ResponseFormat.response(data=None)
     
 class EnrollmentDeleteView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     def delete(self, request, user_id, register_id):
         try:
             # sinh_vien = SinhVien.objects.get(user = user_id)
