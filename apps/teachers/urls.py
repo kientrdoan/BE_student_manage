@@ -27,8 +27,8 @@ urlpatterns += [
 ]
 
 urlpatterns += [
-    path('semesters/', SemesterView.as_view()),
-    path('current-semesters/', CurrentSemesterView.as_view()),
+    path('semesters', SemesterView.as_view()),
+    path('current-semesters', CurrentSemesterView.as_view()),
 ]
 
 urlpatterns += [

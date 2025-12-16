@@ -13,6 +13,7 @@ from apps.my_built_in.response import ResponseFormat
 class SemesterView(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
+
     def get(self, request):
         semesters = Semester.objects.all().order_by('-start_date')
         serializer = SemesterSerializer(semesters, many=True)
@@ -21,6 +22,7 @@ class SemesterView(APIView):
 class CurrentSemesterView(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
+    
     def get(self, request):
         today = date.today()
         semester = Semester.objects.filter(
