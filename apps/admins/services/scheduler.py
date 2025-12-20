@@ -30,7 +30,7 @@ class Chromosome:
 
     def initialize_random(self):
         """Khởi tạo gen ngẫu nhiên, tuân theo phân công cứng"""
-        days = list(range(2))  # 0=Thứ2, 1=Thứ3,..., 5=Thứ7
+        days = list(range(6))  # 0=Thứ2, 1=Thứ3,..., 5=Thứ7
         slots = [1, 6]  # ← SỬA: Thêm đầy đủ các tiết
 
         # Tạo map phân công cứng theo course_id

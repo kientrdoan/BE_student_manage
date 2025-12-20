@@ -38,8 +38,8 @@ class ScheduleView(APIView):
     API xếp lịch học tự động bằng Genetic Algorithm
     """
     parser_classes = (MultiPartParser, FormParser)
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    # authentication_classes = [JWTAuthentication]
+    # permission_classes = [IsAuthenticated]
 
     def post(self, request):
         """
@@ -66,7 +66,7 @@ class ScheduleView(APIView):
         validated_data = serializer.validated_data
         semester_id = validated_data['semester_id']
         excel_file = validated_data.get('excel_file')
-        holiday_file = validated_data.get('holiday_file')
+        holiday_file = validated_data.get('holiday_file', [])
 
         try:
             # Parse hard assignments từ Excel nếu có
@@ -74,7 +74,10 @@ class ScheduleView(APIView):
             if excel_file:
                 logger.info("Đang đọc file Excel hard assignments...")
                 hard_assignments = self._parse_excel_hard_assignments(excel_file)
-                holidays = self._parse_excel_holidays(holiday_file)
+                if holiday_file:
+                    holidays = self._parse_excel_holidays(holiday_file)
+                else:
+                    holidays = []
                 logger.info(f"Đã đọc {len(hard_assignments)} phân công cứng từ Excel")
             # print("hard_assignments",hard_assignments)
             # Khởi tạo scheduler với tham số tùy chỉnh

@@ -6,7 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from apps.my_built_in.rest_framework.permission import IsTeacher, IsAdmin
 
 
-from apps.authens.serializers.user import UserDetailSerializer, UserListSerializer, UserCreateSerializer
+from apps.authens.serializers.user import UserDetailSerializer, UserListSerializer, UserCreateSerializer, UserChangePasswordSerializer
 
 from apps.my_built_in.models.tai_khoan import TaiKhoan as User
 
@@ -19,6 +19,16 @@ class UserView(views.APIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return ResponseFormat.response(data=serializer.data, case_name="SUCCESS")
+    
+    def put(self, request):
+        serializer = UserChangePasswordSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return ResponseFormat.response(
+            data=None,
+            case_name="SUCCESS",
+        )
     
 class UserProfile(views.APIView):
     permission_classes = [IsAuthenticated]

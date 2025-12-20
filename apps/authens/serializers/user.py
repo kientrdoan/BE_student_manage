@@ -38,6 +38,36 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         model = TaiKhoan
         fields = ['email', 'first_name', 'last_name', 'phone', 'address', 'identity_number', 'birthday', 'gender', 'role', 'url', 'is_active']
 
+class UserChangePasswordSerializer(serializers.Serializer):
+    user_id = serializers.IntegerField(write_only=True)
+    old_password = serializers.CharField(write_only=True)
+    new_password = serializers.CharField(write_only=True)
+
+    def validate(self, attrs):
+        user_id = attrs.get("user_id")
+        old_password = attrs.get("old_password")
+        print(user_id, old_password)
+
+        try:
+            user = TaiKhoan.objects.get(id=user_id)
+            print(user.check_password(str(old_password)))
+        except TaiKhoan.DoesNotExist:
+            raise serializers.ValidationError("User không tồn tại")
+
+        if not user.check_password(str(old_password)):
+            raise serializers.ValidationError("Mật khẩu cũ không đúng")
+
+        attrs["user"] = user
+        return attrs
+
+    def save(self, **kwargs):
+        user = self.validated_data["user"]
+        new_password = self.validated_data["new_password"]
+
+        user.set_password(new_password)
+        user.save()
+        return user
+
 
 
 
