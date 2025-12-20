@@ -26,8 +26,17 @@ class TeacherView(APIView):
         teacher_code = Teacher.objects.filter(teacher_code = request.data.get("teacher_code")).first()
         if teacher_code:
             return ResponseFormat.response(data=None, case_name="TEACHER_CODE_EXIST", status=400)
-        student_email = User.objects.filter(email=request.data.get("user.email")).first()
-        if student_email:
+        
+        teacher_phone = User.objects.filter(phone=request.data.get("user.phone")).first()
+        if teacher_phone:
+            return ResponseFormat.response(data=None, case_name="PHONE_EXIST", status=400)
+        
+        teacher_identity_number = User.objects.filter(identity_number=request.data.get("user.identity_number")).first()
+        if teacher_identity_number:
+            return ResponseFormat.response(data=None, case_name="IDENTITY_NUMBER", status=400)
+        
+        teacher_email = User.objects.filter(email=request.data.get("user.email")).first()
+        if teacher_email:
             return ResponseFormat.response(data=None, case_name="EMAIL_EXISTS", status=400)
         serializer = TeacherCreateSerializer(data=request.data)
         print(request.data)

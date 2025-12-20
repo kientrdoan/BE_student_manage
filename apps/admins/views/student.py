@@ -49,6 +49,14 @@ class StudentView(APIView):
         student_email = User.objects.filter(email=request.data.get("user.email")).first()
         if student_email:
             return ResponseFormat.response(data=None, case_name="EMAIL_EXISTS", status=400)
+        
+        student_phone = User.objects.filter(phone=request.data.get("user.phone")).first()
+        if student_phone:
+            return ResponseFormat.response(data=None, case_name="PHONE_EXIST", status=400)
+        
+        student_identity_number = User.objects.filter(identity_number=request.data.get("user.identity_number")).first()
+        if student_identity_number:
+            return ResponseFormat.response(data=None, case_name="IDENTITY_NUMBER", status=400)
 
         # Sử dụng serializer để validate và lưu dữ liệu
         serializer = StudentCreateSerializer(
