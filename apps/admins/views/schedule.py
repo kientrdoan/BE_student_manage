@@ -38,8 +38,9 @@ class ScheduleView(APIView):
     API xếp lịch học tự động bằng Genetic Algorithm
     """
     parser_classes = (MultiPartParser, FormParser)
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
+
+    # authentication_classes = [JWTAuthentication]
+    # permission_classes = [IsAuthenticated]
 
     def post(self, request):
         """
@@ -76,7 +77,7 @@ class ScheduleView(APIView):
                 hard_assignments = self._parse_excel_hard_assignments(excel_file)
                 holidays = self._parse_excel_holidays(holiday_file)
                 logger.info(f"Đã đọc {len(hard_assignments)} phân công cứng từ Excel")
-            # print("hard_assignments",hard_assignments)
+            print("hard_assignments",hard_assignments, semester_id, holidays)
             # Khởi tạo scheduler với tham số tùy chỉnh
             scheduler = GeneticScheduler(semester_id=semester_id, HOLIDAYS=holidays)
 
@@ -92,7 +93,7 @@ class ScheduleView(APIView):
 
             # Lấy danh sách lớp cần xếp
             courses = scheduler.get_courses_to_schedule()
-
+            print("courses",courses)
             if not courses:
                 return ResponseFormat.response(
                     data={
@@ -120,7 +121,7 @@ class ScheduleView(APIView):
                 )
 
             best_chromosome = result['best_chromosome']
-
+            print("best_chromosome",best_chromosome)
             # Áp dụng lịch học vào database
             logger.info("Đang lưu lịch học vào database...")
             saved = scheduler.save_to_database(best_chromosome)

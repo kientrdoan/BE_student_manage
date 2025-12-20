@@ -39,9 +39,11 @@ class Chromosome:
         for course in self.courses:
             # Lấy GV có thể dạy môn này
             eligible_teachers = self.get_eligible_teachers(course)
+            print("eligible_teachers",eligible_teachers)
+            
             # Lấy phòng phù hợp
             suitable_rooms = self.get_suitable_rooms(course)
-
+            print("suitable_rooms",suitable_rooms)
             if eligible_teachers and suitable_rooms:
                 # Kiểm tra có phân công cứng không
                 hard_assign = hard_map.get(course.id)
@@ -161,6 +163,7 @@ class GeneticScheduler:
         for i in range(self.POPULATION_SIZE):
             # ← SỬA: TRUYỀN hard_assignments vào Chromosome
             chromosome = Chromosome(courses, hard_assignments=hard_assignments)
+            print("chromosome",chromosome)
             self.population.append(chromosome)
 
             if (i + 1) % 20 == 0:

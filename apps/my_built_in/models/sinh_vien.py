@@ -12,5 +12,5 @@ class SinhVien(models.Model):
     class Meta:
         db_table = "sinh_vien"
 
-    def __str__(self):
-        return f"{self.first_name} {self.last_name}"
+    # def __str__(self):
+    #     return f"{self.first_name} {self.last_name}"
