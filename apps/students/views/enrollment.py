@@ -31,7 +31,6 @@ class EnrollmentCreateView(APIView):
                 dang_ky.save()
             else:
                 lop_tin_chi = LopTinChi.objects.get(id=course_id)
-                lop_tin_chi.max_capacity -= 1
                 lop_tin_chi.save()
 
             lop_tin_chi = LopTinChi.objects.get(id=course_id)
