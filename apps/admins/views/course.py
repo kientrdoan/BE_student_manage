@@ -43,9 +43,11 @@ class CourseCreateView(APIView):
         ).first()
 
         if course:
+            if course.is_deleted == False:
+                return ResponseFormat.response(data=None, case_name="COURSE_EXIST", status=400)
             course.is_deleted = False
             course.save()
-            return ResponseFormat.response(data=serializer.data, case_name="SUCCESS")
+            return ResponseFormat.response(data=None, case_name="SUCCESS")
         else:
             serializer = CourseCreateSerializer(data=request.data)
             if serializer.is_valid():

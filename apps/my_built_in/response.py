@@ -13,6 +13,7 @@ RESPONSE_CODE = {
     "EMAIL_EXISTS": {"code": 400, "msg": "Email đã tồn tại"},
     "IDENTITY_NUMBER": {"code": 400, "msg": "Mã định danh đã tồn tại"},
     "PHONE_EXIST": {"code": 400, "msg": "Số điện thoại đã tồn tại"},
+    "COURSE_EXIST": {"code": 400, "msg": "Lớp tín chỉ học đã tồn tại"},
 }
 
 class ResponseFormat:
