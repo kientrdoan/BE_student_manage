@@ -15,11 +15,16 @@ class TeacherView(APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request):
         is_deleted = request.GET.get("is_deleted", None)
+        department_id = request.GET.get("department_id", None)
         if is_deleted is not None:
-            students = Teacher.objects.filter(is_deleted = is_deleted)
+            teachers = Teacher.objects.filter(is_deleted = is_deleted)
+            if department_id is not None:
+                teachers = Teacher.objects.filter(is_deleted = is_deleted, department__id = department_id)
         else:
-            students = Teacher.objects.all()
-        serializer = TeacherDetailSerializer(students, many=True)
+            teachers = Teacher.objects.all()
+            if department_id is not None:
+                teachers = Teacher.objects.filter(department__id = department_id)
+        serializer = TeacherDetailSerializer(teachers, many=True)
         return ResponseFormat.response(data=serializer.data, case_name="SUCCESS")
 
     def post(self, request):

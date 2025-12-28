@@ -10,6 +10,8 @@ class ScoreSerializer(serializers.ModelSerializer):
         fields = [
             'id',
             'mid_score',
+            'discuss_score',
+            'project_scoure',
             'final_score',
             'attendance_score',
             'exercise_score',

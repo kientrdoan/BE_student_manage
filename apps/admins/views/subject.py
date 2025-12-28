@@ -17,10 +17,15 @@ class SubjectView(APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request):
         is_deleted = request.GET.get("is_deleted", None)
+        major_id = request.GET.get("major_id", None)
         if is_deleted is not None:
             subjects = Subject.objects.filter(is_deleted = is_deleted)
+            if major_id is not None:
+                subjects = Subject.objects.filter(is_deleted = is_deleted, major__id = major_id)
         else:
             subjects = Subject.objects.all()
+            if major_id is not None:
+                subjects = Subject.objects.filter(major__id = major_id)
         serializer = SubjectListSerializer(subjects, many=True)
         return ResponseFormat.response(data=serializer.data)
     

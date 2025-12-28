@@ -12,6 +12,8 @@ class DangKy(models.Model):
     final_score = models.FloatField(null=True, blank=True)
     attendance_score = models.FloatField(null=True, blank=True)
     exercise_score = models.FloatField(null=True, blank=True)
+    discuss_score = models.FloatField(null= True, blank=True)
+    project_score = models.FloatField(null=True, blank=True)
 
     class Meta:
         db_table = "dang_ky"

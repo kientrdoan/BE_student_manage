@@ -7,7 +7,8 @@ class ScoreStudentSerializer(serializers.ModelSerializer):
     subject = serializers.SerializerMethodField()
     class Meta:
         model = DangKy
-        fields = ['id', 'attendance_score', 'exercise_score', 'mid_score', 'final_score', 'student', 'subject']
+        fields = ['id', 'attendance_score', 'discuss_score', 'exercise_score', 
+                  'project_score', 'mid_score', 'final_score', 'student', 'subject']
         read_only_fields = ['id']
 
     def get_student(self, obj):

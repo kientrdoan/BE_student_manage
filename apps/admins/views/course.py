@@ -31,7 +31,31 @@ class CourseView(APIView):
             courses = Course.objects.filter(semester__id = semester_id)
         serializer = CourseSerializer(courses, many=True)
         return ResponseFormat.response(data=serializer.data)
-    
+
+class CourseByClass(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, class_id=None):
+        print(class_id)
+        is_deleted = request.GET.get("is_deleted", None)
+        if is_deleted is not None:
+            courses = Course.objects.filter(is_deleted = is_deleted).prefetch_related(
+                'buoi_hoc'
+            )
+            if class_id is not None:
+                courses = Course.objects.filter(class_st__id = class_id, is_deleted = is_deleted).prefetch_related(
+                    'buoi_hoc'
+                )
+        else:
+            courses = Course.objects.filter(class_st__id = class_id)
+            if class_id is not None:
+                courses = Course.objects.filter(class_st__id = class_id).prefetch_related(
+                    'buoi_hoc'
+                )
+        serializer = CourseSerializer(courses, many=True)
+        return ResponseFormat.response(data=serializer.data)
+
 class CourseCreateView(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]

@@ -6,10 +6,21 @@ from apps.authens.serializers.user import UserCreateSerializer, UserUpdateSerial
 
 class TeacherDetailSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField()
+    department = serializers.SerializerMethodField()
+
     class Meta:
         model = GiaoVien
         fields = ['id', "teacher_code", "degree", "title", "department", "user", "start_date", "end_date", "is_deleted"]
     
+    def get_department(self, obj):
+        department = obj.department
+        if department:
+            return {
+                "department_id": department.id,
+                "department_name": department.name
+            }
+        return None
+
     def get_user(self, obj):
         user = obj.user
         if user:

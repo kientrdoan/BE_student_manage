@@ -35,10 +35,12 @@ class SinhVienMonHocView(APIView):
                 student_code = row.get('student_code')
                 try:
                     dang_ky = DangKy.objects.get(course= course_id, student__student_code=student_code, is_deleted=False)
-                    dang_ky.attendance_score = row.get('attendance_score', 0)
-                    dang_ky.exercise_score = row.get('exercise_score', 0)
-                    dang_ky.mid_score = row.get('mid_score', 0)
-                    dang_ky.final_score = row.get('final_score', 0)
+                    dang_ky.attendance_score = row.get('attendance_score', None)
+                    dang_ky.discuss_score = row.get('discuss_score', None)
+                    dang_ky.exercise_score = row.get('exercise_score', None)
+                    dang_ky.project_score = row.get('project_score', None)
+                    dang_ky.mid_score = row.get('mid_score', None)
+                    dang_ky.final_score = row.get('final_score', None)
                     dang_ky.save()
                 except DangKy.DoesNotExist:
                     continue 
@@ -60,10 +62,12 @@ class ScoreUpdateView(APIView):
             )
 
             print(score)
-            dang_ky.attendance_score = score.get('attendance_score', 0)
-            dang_ky.exercise_score = score.get('exercise_score', 0)
-            dang_ky.mid_score = score.get('mid_score', 0)
-            dang_ky.final_score = score.get('final_score', 0)
+            dang_ky.attendance_score = score.get('attendance_score', None)
+            dang_ky.discuss_score = score.get('discuss_score', None)
+            dang_ky.exercise_score = score.get('exercise_score', None)
+            dang_ky.project_score = score.get('project_score', None)
+            dang_ky.mid_score = score.get('mid_score', None)
+            dang_ky.final_score = score.get('final_score', None)
             dang_ky.save()
 
         except DangKy.DoesNotExist:
