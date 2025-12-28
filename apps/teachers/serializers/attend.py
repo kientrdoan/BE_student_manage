@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from apps.my_built_in.models.tham_du import ThamDu
+from apps.my_built_in.models.buoi_hoc import BuoiHoc
 from apps.my_built_in.models.sinh_vien import SinhVien
 
 class AttendSerializer(serializers.ModelSerializer):
@@ -24,6 +25,12 @@ class AttendCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = ThamDu
         fields = ['enroll_id', 'time_slot_id', 'status']
+
+class UpdateStateSerializer(serializers.ModelSerializer):
+    attends = serializers.SerializerMethodField()
+    class Meta:
+        model = BuoiHoc
+        fields = ['is_open']
 
            
 

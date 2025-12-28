@@ -8,7 +8,7 @@ from apps.my_built_in.models.buoi_hoc import BuoiHoc
 from apps.my_built_in.models.dang_ky import DangKy
 from django.db import transaction
 
-from apps.teachers.serializers.attend import AttendSerializer, AttendCreateSerializer
+from apps.teachers.serializers.attend import AttendSerializer, AttendCreateSerializer, UpdateStateSerializer
 
 from apps.my_built_in.response import ResponseFormat
 
@@ -99,3 +99,17 @@ class AttendMultiCreateView(APIView):
                 status=405
             )
 
+class UpdateStateOpenView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    def put(self, request):
+        try:
+            time_slot_id = request.data.get("time_slot_id", None)
+            print(time_slot_id)
+            is_open = request.data.get("is_open", None)
+            buoi_hoc = BuoiHoc.objects.get(id = time_slot_id)
+            buoi_hoc.is_open = is_open
+            buoi_hoc.save()
+        except BuoiHoc.DoesNotExist:
+            return ResponseFormat.response(data=None, case_name="NOT_FOUND", status=404)
+        return ResponseFormat.response(data=None)

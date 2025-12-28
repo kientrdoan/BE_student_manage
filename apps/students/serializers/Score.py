@@ -11,7 +11,7 @@ class ScoreSerializer(serializers.ModelSerializer):
             'id',
             'mid_score',
             'discuss_score',
-            'project_scoure',
+            'project_score',
             'final_score',
             'attendance_score',
             'exercise_score',

@@ -9,6 +9,8 @@ class BuoiHoc(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     # is_deleted = models.BooleanField(default=False)
 
+    is_open = models.BooleanField(default=True)
+
     class Meta:
         db_table = 'buoi_hoc'
 
