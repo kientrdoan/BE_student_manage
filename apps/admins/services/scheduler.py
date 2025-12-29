@@ -103,8 +103,8 @@ class GeneticScheduler:
     """
 
     # Tham số GA
-    POPULATION_SIZE = 50  # Kích thước quần thể
-    GENERATIONS = 50  # Số thế hệ tối đa
+    POPULATION_SIZE = 10  # Kích thước quần thể
+    GENERATIONS = 10  # Số thế hệ tối đa
     CROSSOVER_RATE = 0.8  # Tỷ lệ lai ghép
     MUTATION_RATE = 0.05  # Tỷ lệ đột biến
     ELITISM_COUNT = 10  # Số cá thể ưu tú giữ lại

@@ -40,7 +40,7 @@ class EnrollmentCreateView(APIView):
                 lop_tin_chi.save()
 
             lop_tin_chi = LopTinChi.objects.get(id=course_id)
-            lop_tin_chi.max_capacity -= 1
+            # lop_tin_chi.max_capacity -= 1
             lop_tin_chi.save()
         except SinhVien.DoesNotExist:
             return ResponseFormat.response(data=None, case_name="NOT_FOUND", status=404)
@@ -58,7 +58,7 @@ class EnrollmentDeleteView(APIView):
             dang_ky.save()
 
             lop_tin_chi = LopTinChi.objects.get(id=dang_ky.course_id)
-            lop_tin_chi.max_capacity += 1
+            # lop_tin_chi.max_capacity += 1
             lop_tin_chi.save()
         except SinhVien.DoesNotExist:
             return ResponseFormat.response(data=None, case_name="NOT_FOUND", status=404)

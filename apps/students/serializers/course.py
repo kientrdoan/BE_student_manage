@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from apps.my_built_in.models.lop_tin_chi import LopTinChi
+from apps.my_built_in.models.dang_ky import DangKy
 
 class CourseSerializer(serializers.ModelSerializer):
 
@@ -8,9 +9,18 @@ class CourseSerializer(serializers.ModelSerializer):
     teacher = serializers.SerializerMethodField()
     class_st = serializers.SerializerMethodField()
     room = serializers.SerializerMethodField()
+    remain_slot = serializers.SerializerMethodField()
+
+    def get_remain_slot(self, obj):
+        if obj.max_capacity is not None:
+            dang_ky = DangKy.objects.filter(course=obj, is_deleted=False)
+            enrolled_count = dang_ky.count()
+            return obj.max_capacity - enrolled_count
+        return None
+
     class Meta:
         model = LopTinChi
-        fields = ['id', 'subject', 'teacher', 'class_st', 'room', 'max_capacity', 'start_date', 'end_date', 'weekday', 'start_period']
+        fields = ['id', 'subject', 'remain_slot', 'teacher', 'class_st', 'room', 'max_capacity', 'start_date', 'end_date', 'weekday', 'start_period']
     def get_subject(self, obj):
         subject = obj.subject
         if subject:
